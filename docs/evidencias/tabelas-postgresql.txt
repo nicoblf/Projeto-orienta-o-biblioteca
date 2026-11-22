@@ -1,0 +1,11 @@
+               List of relations
+ Schema |       Name       | Type  |   Owner    
+--------+------------------+-------+------------
+ public | categoria_leitor | table | biblioteca
+ public | emprestimo       | table | biblioteca
+ public | exemplar         | table | biblioteca
+ public | livro            | table | biblioteca
+ public | multa            | table | biblioteca
+ public | usuario          | table | biblioteca
+(6 rows)
+

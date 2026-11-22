@@ -1,0 +1,58 @@
+
+1. Consulta ao acervo (RF04) - busca por "programacao"
+------------------------------------------------------
+  Clean Code                                 1 de 2 exemplar(es) disponivel(is)
+  Java: Como Programar                       1 de 2 exemplar(es) disponivel(is)
+  Estruturas de Dados e Algoritmos em Java   1 de 1 exemplar(es) disponivel(is)
+
+2. Empréstimo válido (RF05): Ana Lima leva o exemplar TB-0008
+-------------------------------------------------------------
+  Registrado. Devolver ate 2026-11-29 | situacao do exemplar: EMPRESTADO
+
+3. Exemplar já emprestado (RF07)
+--------------------------------
+  BLOQUEADO: O exemplar TB-0001 não está disponível (situação: EMPRESTADO).
+
+4. Leitor com atraso (RF08): Bruno Costa
+----------------------------------------
+  BLOQUEADO: Bruno Costa possui atraso ou multa em aberto.
+
+5. Leitor com multa em aberto (RF08): Diego Rocha
+-------------------------------------------------
+  BLOQUEADO: Diego Rocha possui atraso ou multa em aberto.
+
+6. Limite de obras (RF08): Ana Lima (aluna, limite 3)
+-----------------------------------------------------
+  Ana agora tem 3 emprestimos ativos.
+  BLOQUEADO: Ana Lima atingiu o limite de 3 obra(s) emprestada(s).
+
+7. Devolução com atraso gera multa automática (RF06, RF09): Bruno Costa
+-----------------------------------------------------------------------
+  Dias de atraso: 13
+  Multa gerada: R$ 13.00 (paga: false)
+
+8. Quitar a multa libera o leitor
+---------------------------------
+  Bruno possui pendencias? true
+  Apos quitar: possui pendencias? false | pode emprestar? true
+
+9. Renovação (RF06)
+-------------------
+  Prazo antes: 2026-11-29
+  Prazo depois: 2026-12-06 (1 renovacao)
+
+10. Baixa de exemplar (RF10)
+----------------------------
+  Estruturas de Dados e Algoritmos em Java: 0 disponivel(is), 0 em circulacao
+
+Painel
+------
+  emprestimosAtivos: 5
+  emprestimosAtrasados: 0
+  devolucoesHoje: 1
+  multasEmAberto: 1
+  valorMultasEmAberto: 3.0
+  titulos: 6
+  exemplares: 10
+  exemplaresDisponiveis: 5
+  exemplaresBaixados: 1

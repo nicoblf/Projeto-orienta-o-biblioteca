@@ -1,0 +1,38 @@
+# Três contêineres, como previsto nas Fases 1 e 2:
+#   db       -> PostgreSQL com volume persistente
+#   backend  -> API em Java
+#   frontend -> interface em TypeScript servida pelo nginx (única porta publicada)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: biblioteca
+      POSTGRES_USER: biblioteca
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-biblioteca_dev}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biblioteca -d biblioteca"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/biblioteca
+      DB_USER: biblioteca
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-biblioteca_dev}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

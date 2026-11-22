@@ -1,0 +1,31 @@
+OK   prazo aluno = 7 dias
+OK   prazo professor = 14 dias
+OK   empréstimo de Bruno está atrasado
+OK   dias de atraso de Bruno = 13
+OK   Bruno possui pendências
+OK   Diego possui multa em aberto
+OK   multa de Diego = 3.00
+OK   exemplar emprestado não pode ser emprestado de novo -> "O exemplar TB-0001 não está disponível (situação: EMPRESTADO)."
+OK   leitor com atraso não pode emprestar -> "Bruno Costa possui atraso ou multa em aberto."
+OK   leitor com multa não pode emprestar -> "Diego Rocha possui atraso ou multa em aberto."
+OK   limite de 3 obras do aluno -> "Ana Lima atingiu o limite de 3 obra(s) emprestada(s)."
+OK   Dom Casmurro: 1 de 3 disponível
+OK   exemplar devolvido fica DISPONIVEL
+OK   devolução atrasada gerou multa
+OK   multa de Bruno = 13 x 1.00
+OK   não devolve duas vezes -> "Este empréstimo já foi devolvido em 2026-11-22."
+OK   após quitar, Bruno pode emprestar
+OK   renovação permitida
+OK   renovação soma o prazo
+OK   2ª renovação
+OK   3ª renovação (limite do professor = 3)
+OK   4ª renovação negada
+OK   exemplar baixado
+OK   exemplar baixado não é emprestado -> "O exemplar TB-0011 não está disponível (situação: BAIXADO)."
+OK   senha correta autentica
+OK   senha errada não autentica
+OK   login devolve o usuário
+OK   JSON: texto com aspas e acento
+OK   JSON: escrita
+
+29 verificacoes OK, 0 falha(s).
