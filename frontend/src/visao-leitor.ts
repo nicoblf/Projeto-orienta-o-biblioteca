@@ -1,14 +1,16 @@
 import { api } from "./api.js";
-import { $, aviso, data, dinheiro, esc, mensagemDe, tentar } from "./ui.js";
+import { celulaMulta, faixaAvisos } from "./avisos.js";
+import { $, aviso, data, esc, mensagemDe, tentar } from "./ui.js";
 
 /** Área do leitor: seus empréstimos, prazos, multas e renovação (RF04, RF06). */
 export async function mostrarMeusEmprestimos(raiz: HTMLElement): Promise<void> {
-  raiz.innerHTML = `<section class="cartao"><h2>Meus empréstimos</h2><div id="lista"></div></section>`;
+  raiz.innerHTML = `<section class="cartao"><h2>Meus empréstimos</h2><div id="avisos"></div><div id="lista"></div></section>`;
   const lista = $("#lista", raiz);
 
   async function carregar(): Promise<void> {
     try {
       const itens = await api.meusEmprestimos();
+      $("#avisos", raiz).innerHTML = faixaAvisos(itens, true);
       if (itens.length === 0) {
         lista.innerHTML = `<p class="vazio">Você ainda não tem empréstimos.</p>`;
         return;
@@ -23,9 +25,7 @@ export async function mostrarMeusEmprestimos(raiz: HTMLElement): Promise<void> {
                 : e.atrasado
                   ? `<span class="selo vermelho">Atrasado (${e.diasAtraso} dia(s))</span>`
                   : `<span class="selo verde">Em dia</span>`;
-              const multa = e.multa
-                ? `${dinheiro(e.multa.valor)} <span class="selo ${e.multa.paga ? "verde" : "vermelho"}">${e.multa.paga ? "paga" : "em aberto"}</span>`
-                : "—";
+              const multa = celulaMulta(e);
               const acao = e.ativo
                 ? `<button data-renovar="${e.id}" ${e.podeRenovar ? "" : "disabled"} class="secundario">Renovar</button>`
                 : "";

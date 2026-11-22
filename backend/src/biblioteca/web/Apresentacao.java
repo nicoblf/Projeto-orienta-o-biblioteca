@@ -60,6 +60,7 @@ final class Apresentacao {
         m.put("nome", l.getNome());
         m.put("email", l.getEmail());
         m.put("matricula", l.getMatricula());
+        m.put("telefone", l.getTelefone());
         m.put("categoria", l.getCategoria().getNome());
         m.put("emprestimosAtivos", l.qtdEmprestimosAtivos());
         m.put("limiteObras", l.getCategoria().getLimiteObras());
@@ -95,6 +96,8 @@ final class Apresentacao {
         m.put("ativo", e.estaAtivo());
         m.put("atrasado", e.estaAtrasado());
         m.put("diasAtraso", e.diasAtraso());
+        m.put("multaEstimada", e.multaEstimada());
+        m.put("telefone", e.getLeitor().getTelefone());
         m.put("podeRenovar", e.motivoImpedimentoRenovacao() == null);
         m.put("multa", multa(e.getMulta()));
         return m;

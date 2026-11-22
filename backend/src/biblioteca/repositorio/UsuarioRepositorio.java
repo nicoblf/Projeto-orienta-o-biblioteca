@@ -37,9 +37,9 @@ public class UsuarioRepositorio extends RepositorioMemoria<Usuario> {
             return super.inserir(u);
         }
         if (u instanceof Leitor l) {
-            return banco.inserir("INSERT INTO usuario (tipo, nome, email, senha_hash, matricula, categoria_id) "
-                    + "VALUES ('LEITOR', ?, ?, ?, ?, ?)", l.getNome(), l.getEmail(), l.getSenhaHash(),
-                    l.getMatricula(), l.getCategoria().getId());
+            return banco.inserir("INSERT INTO usuario (tipo, nome, email, senha_hash, matricula, categoria_id, telefone) "
+                    + "VALUES ('LEITOR', ?, ?, ?, ?, ?, ?)", l.getNome(), l.getEmail(), l.getSenhaHash(),
+                    l.getMatricula(), l.getCategoria().getId(), l.getTelefone());
         }
         Bibliotecario b = (Bibliotecario) u;
         return banco.inserir("INSERT INTO usuario (tipo, nome, email, senha_hash, registro_funcional) "
@@ -60,7 +60,7 @@ public class UsuarioRepositorio extends RepositorioMemoria<Usuario> {
             if ("LEITOR".equals(rs.getString("tipo"))) {
                 CategoriaLeitor cat = categorias.buscarPorId(rs.getInt("categoria_id")).orElseThrow();
                 u = Leitor.restaurar(rs.getInt("id"), rs.getString("nome"), rs.getString("email"),
-                        rs.getString("senha_hash"), rs.getString("matricula"), cat);
+                        rs.getString("senha_hash"), rs.getString("matricula"), cat, rs.getString("telefone"));
             } else {
                 u = Bibliotecario.restaurar(rs.getInt("id"), rs.getString("nome"), rs.getString("email"),
                         rs.getString("senha_hash"), rs.getString("registro_funcional"));

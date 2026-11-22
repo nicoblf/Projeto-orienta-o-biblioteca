@@ -64,6 +64,15 @@ public class Emprestimo implements Identificavel {
         return dias > 0 ? (int) dias : 0;
     }
 
+    /** Multa que seria cobrada se o livro fosse devolvido hoje (0 se não está atrasado). A multa real só é gerada na devolução. */
+    public double multaEstimada() {
+        if (!estaAtrasado()) {
+            return 0;
+        }
+        double bruto = diasAtraso() * leitor.getCategoria().getValorMultaDiaria();
+        return Math.round(bruto * 100.0) / 100.0;
+    }
+
     /** Motivo pelo qual a renovação não é permitida, ou null se pode renovar (RF06). */
     public String motivoImpedimentoRenovacao() {
         if (!estaAtivo()) {

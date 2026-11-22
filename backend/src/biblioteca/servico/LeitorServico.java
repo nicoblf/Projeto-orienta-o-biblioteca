@@ -19,10 +19,13 @@ public class LeitorServico {
         this.categorias = categorias;
     }
 
-    public Leitor cadastrar(String nome, String email, String senha, String matricula, int categoriaId) {
+    public Leitor cadastrar(String nome, String email, String senha, String matricula, int categoriaId, String telefone) {
+        if (telefone == null || telefone.isBlank()) {
+            throw new RegraNegocioException("O telefone é obrigatório.");
+        }
         CategoriaLeitor categoria = categorias.buscarPorId(categoriaId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Categoria não encontrada."));
-        Leitor leitor = new Leitor(nome, email, senha, matricula, categoria);
+        Leitor leitor = new Leitor(nome, email, senha, matricula, categoria, telefone);
         if (usuarios.buscarPorEmail(leitor.getEmail()).isPresent()) {
             throw new RegraNegocioException("Já existe um usuário com o e-mail " + leitor.getEmail() + ".");
         }
@@ -34,12 +37,12 @@ public class LeitorServico {
     }
 
     /** Autocadastro público: o novo leitor entra sempre na categoria "Aluno" (o bibliotecário cadastra as demais). */
-    public Leitor autocadastrarAluno(String nome, String email, String senha, String matricula) {
+    public Leitor autocadastrarAluno(String nome, String email, String senha, String matricula, String telefone) {
         CategoriaLeitor aluno = categorias.listar().stream()
                 .filter(c -> c.getNome().equalsIgnoreCase("Aluno"))
                 .findFirst()
                 .orElseThrow(() -> new RegraNegocioException("Categoria Aluno não configurada."));
-        return cadastrar(nome, email, senha, matricula, aluno.getId());
+        return cadastrar(nome, email, senha, matricula, aluno.getId(), telefone);
     }
 
     public Leitor buscarPorMatricula(String matricula) {

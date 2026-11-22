@@ -4,6 +4,7 @@
   Clean Code                                 1 de 2 exemplar(es) disponivel(is)
   Java: Como Programar                       1 de 2 exemplar(es) disponivel(is)
   Estruturas de Dados e Algoritmos em Java   1 de 1 exemplar(es) disponivel(is)
+  Algoritmos: Teoria e Prática               0 de 1 exemplar(es) disponivel(is)
 
 2. Empréstimo válido (RF05): Ana Lima leva o exemplar TB-0008
 -------------------------------------------------------------
@@ -47,12 +48,12 @@
 
 Painel
 ------
-  emprestimosAtivos: 5
+  emprestimosAtivos: 8
   emprestimosAtrasados: 0
   devolucoesHoje: 1
   multasEmAberto: 1
   valorMultasEmAberto: 3.0
-  titulos: 6
-  exemplares: 10
+  titulos: 9
+  exemplares: 13
   exemplaresDisponiveis: 5
-  exemplaresBaixados: 1
+  exemplaresBaixados: 2

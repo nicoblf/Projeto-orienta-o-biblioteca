@@ -45,6 +45,7 @@ export interface Leitor {
   nome: string;
   email: string;
   matricula: string;
+  telefone: string | null;
   categoria: string;
   emprestimosAtivos: number;
   limiteObras: number;
@@ -73,6 +74,8 @@ export interface Emprestimo {
   ativo: boolean;
   atrasado: boolean;
   diasAtraso: number;
+  multaEstimada: number;
+  telefone: string | null;
   podeRenovar: boolean;
   multa: Multa | null;
 }

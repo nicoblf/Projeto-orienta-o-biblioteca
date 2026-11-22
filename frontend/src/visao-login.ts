@@ -26,6 +26,7 @@ export function mostrarLogin(raiz: HTMLElement, aoEntrar: (s: Sessao) => void, a
         <p class="ajuda">Cadastre-se como leitor (prazo de 7 dias, até 3 obras). Seu RA é a matrícula usada no balcão.</p>
         <label>Nome completo <input id="c-nome" required autocomplete="name" /></label>
         <label>RA (matrícula) <input id="c-ra" required placeholder="Ex.: RA2024010" /></label>
+        <label>Telefone (com DDD) <input id="c-tel" type="tel" required placeholder="(11) 91234-5678" autocomplete="tel" /></label>
         <label>E-mail <input id="c-email" type="email" required autocomplete="email" /></label>
         <label>Senha (mín. 6 caracteres) <input id="c-senha" type="password" minlength="6" required autocomplete="new-password" /></label>
         <button type="submit">Criar conta e entrar</button>
@@ -66,6 +67,7 @@ export function mostrarLogin(raiz: HTMLElement, aoEntrar: (s: Sessao) => void, a
         nome: v("#c-nome"),
         matricula: v("#c-ra"),
         email: v("#c-email"),
+        telefone: v("#c-tel"),
         senha: v("#c-senha"),
       });
       aviso("Cadastro realizado. Bem-vindo(a)!", "ok");

@@ -28,10 +28,10 @@ public final class DadosIniciais {
         Bibliotecario maria = new Bibliotecario("Maria Souza", EMAIL_BIBLIOTECARIO, SENHA_BIBLIOTECARIO, "REG-001");
         app.usuarios.salvar(maria);
 
-        Leitor ana = leitor(app, "Ana Lima", "ana@aluno.com", "RA2024001", aluno);
-        Leitor bruno = leitor(app, "Bruno Costa", "bruno@aluno.com", "RA2024002", aluno);
-        Leitor carla = leitor(app, "Carla Dias", "carla@escola.com", "PROF0001", professor);
-        Leitor diego = leitor(app, "Diego Rocha", "diego@aluno.com", "RA2024003", aluno);
+        Leitor ana = leitor(app, "Ana Lima", "ana@aluno.com", "RA2024001", aluno, "(11) 91111-0001");
+        Leitor bruno = leitor(app, "Bruno Costa", "bruno@aluno.com", "RA2024002", aluno, "(11) 92222-0002");
+        Leitor carla = leitor(app, "Carla Dias", "carla@escola.com", "PROF0001", professor, "(11) 93333-0003");
+        Leitor diego = leitor(app, "Diego Rocha", "diego@aluno.com", "RA2024003", aluno, "(11) 94444-0004");
 
         Livro domCasmurro = livro(app, "Dom Casmurro", "Machado de Assis", "Editora Exemplo", "978-0-00-000001-1", "Literatura", "TB-0001", "TB-0002", "TB-0003");
         Livro cleanCode = livro(app, "Clean Code", "Robert C. Martin", "Prentice Hall", "978-0-13-235088-4", "Programação", "TB-0004", "TB-0005");
@@ -68,8 +68,8 @@ public final class DadosIniciais {
         return maria;
     }
 
-    private static Leitor leitor(Aplicacao app, String nome, String email, String matricula, CategoriaLeitor categoria) {
-        Leitor l = new Leitor(nome, email, SENHA_LEITORES, matricula, categoria);
+    private static Leitor leitor(Aplicacao app, String nome, String email, String matricula, CategoriaLeitor categoria, String telefone) {
+        Leitor l = new Leitor(nome, email, SENHA_LEITORES, matricula, categoria, telefone);
         app.usuarios.salvar(l);
         return l;
     }

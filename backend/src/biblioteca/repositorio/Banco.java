@@ -132,8 +132,10 @@ public final class Banco {
             senha_hash VARCHAR(200) NOT NULL,
             matricula VARCHAR(40) UNIQUE,
             categoria_id INT REFERENCES categoria_leitor(id),
-            registro_funcional VARCHAR(40)
+            registro_funcional VARCHAR(40),
+            telefone VARCHAR(20)
         )""",
+        "ALTER TABLE usuario ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)",
         """
         CREATE TABLE IF NOT EXISTS livro (
             id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

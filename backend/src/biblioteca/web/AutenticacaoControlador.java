@@ -30,7 +30,7 @@ public class AutenticacaoControlador implements Controlador {
         r.adicionar("POST", "/api/cadastro", Perfil.PUBLICO, ctx -> {
             String email = ctx.texto("email");
             String senha = ctx.texto("senha");
-            leitores.autocadastrarAluno(ctx.texto("nome"), email, senha, ctx.texto("matricula"));
+            leitores.autocadastrarAluno(ctx.texto("nome"), email, senha, ctx.texto("matricula"), ctx.texto("telefone"));
             String token = autenticacao.login(email, senha);
             Map<String, Object> corpo = dadosUsuario(autenticacao.usuarioDoToken(token));
             corpo.put("token", token);

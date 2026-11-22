@@ -1,4 +1,5 @@
 import { api } from "./api.js";
+import { faixaAvisos, telefoneBR } from "./avisos.js";
 import { barras, colunas, CORES, rosca } from "./graficos.js";
 import { criarFiltroAcervo } from "./filtros-acervo.js";
 import type { Emprestimo, Leitor, Livro, Painel } from "./tipos.js";
@@ -67,10 +68,12 @@ function desenharGraficos(p: Painel, livros: Livro[], todos: Emprestimo[]): stri
 
 export async function mostrarPainel(raiz: HTMLElement): Promise<void> {
   raiz.innerHTML = `
+    <div id="faixa"></div>
     <section class="cartao"><h2>Painel</h2><div id="cartoes" class="grade"></div></section>
     <section class="cartao"><h2>Gráficos</h2><div id="graficos" class="graficos"></div></section>`;
   try {
     const [p, livros, todos] = await Promise.all([api.painel(), api.buscarLivros(""), api.listarEmprestimos("todos")]);
+    $("#faixa", raiz).innerHTML = faixaAvisos(todos, false);
     $("#graficos", raiz).innerHTML = desenharGraficos(p, livros, todos);
     const item = (rotulo: string, valor: string | number, destaque = false): string =>
       `<div class="indicador ${destaque ? "alerta" : ""}"><span>${rotulo}</span><strong>${valor}</strong></div>`;
@@ -93,7 +96,7 @@ export async function mostrarPainel(raiz: HTMLElement): Promise<void> {
 
 function linhaEmprestimo(e: Emprestimo, comAcoes: boolean): string {
   const situacao = e.atrasado
-    ? `<span class="selo vermelho">Atrasado (${e.diasAtraso} dia(s))</span>`
+    ? `<span class="selo vermelho">Atrasado (${e.diasAtraso} dia(s))</span><br><small>multa estimada ${dinheiro(e.multaEstimada)}</small>`
     : `<span class="selo verde">Em dia</span>`;
   const acoes = comAcoes
     ? `<td class="acoes">
@@ -102,7 +105,7 @@ function linhaEmprestimo(e: Emprestimo, comAcoes: boolean): string {
        </td>`
     : "";
   return `<tr>
-    <td>${esc(e.leitor)}<br><small>${esc(e.matricula)}</small></td>
+    <td>${esc(e.leitor)}<br><small>${esc(e.matricula)} · ${esc(telefoneBR(e.telefone))}</small></td>
     <td><strong>${esc(e.titulo)}</strong><br><small>Tombo ${esc(e.codigoTombo)}</small></td>
     <td>${data(e.dataEmprestimo)}</td>
     <td>${data(e.dataPrevista)}</td>
@@ -111,6 +114,7 @@ function linhaEmprestimo(e: Emprestimo, comAcoes: boolean): string {
 
 export async function mostrarBalcao(raiz: HTMLElement): Promise<void> {
   raiz.innerHTML = `
+    <div id="faixa"></div>
     <section class="cartao">
       <h2>Registrar empréstimo</h2>
       <p class="ajuda">O sistema confere se o exemplar está livre e se o leitor não tem atraso, multa em aberto ou limite atingido.</p>
@@ -168,6 +172,7 @@ export async function mostrarBalcao(raiz: HTMLElement): Promise<void> {
   async function carregar(): Promise<void> {
     try {
       const itens = await api.listarEmprestimos("ativos");
+      $("#faixa", raiz).innerHTML = faixaAvisos(itens, false);
       lista.innerHTML =
         itens.length === 0
           ? `<p class="vazio">Nenhum empréstimo em aberto.</p>`
@@ -211,9 +216,10 @@ export async function mostrarBalcao(raiz: HTMLElement): Promise<void> {
 // ---------- Atrasos ----------
 
 export async function mostrarAtrasos(raiz: HTMLElement): Promise<void> {
-  raiz.innerHTML = `<section class="cartao"><h2>Empréstimos em atraso</h2><div id="lista"></div></section>`;
+  raiz.innerHTML = `<div id="faixa"></div><section class="cartao"><h2>Empréstimos em atraso</h2><div id="lista"></div></section>`;
   try {
     const itens = await api.listarEmprestimos("atrasados");
+    $("#faixa", raiz).innerHTML = faixaAvisos(itens, false);
     $("#lista", raiz).innerHTML =
       itens.length === 0
         ? `<p class="vazio">Nenhum atraso hoje.</p>`
@@ -350,7 +356,8 @@ export async function mostrarLeitores(raiz: HTMLElement): Promise<void> {
       <form id="novo-leitor" class="grade-form">
         <input id="nome" placeholder="Nome completo" required />
         <input id="email" type="email" placeholder="E-mail" required />
-        <input id="matricula" placeholder="Matrícula" required />
+        <input id="matricula" placeholder="Matrícula / RA" required />
+        <input id="telefone" type="tel" placeholder="Telefone com DDD" required />
         <input id="senha" type="password" placeholder="Senha inicial (mín. 6)" minlength="6" required />
         <select id="categoria" required></select>
         <button type="submit">Cadastrar leitor</button>
@@ -366,10 +373,10 @@ export async function mostrarLeitores(raiz: HTMLElement): Promise<void> {
     const lista = filtrarLeitores(cadastrados, $<HTMLInputElement>("#busca-leitores", raiz).value);
     $("#leitores", raiz).innerHTML = lista.length === 0
       ? `<p class="vazio">Nenhum leitor encontrado.</p>`
-      : `<p class="contagem">${lista.length} de ${cadastrados.length} leitor(es)</p><table><thead><tr><th>Nome</th><th>RA / matrícula</th><th>Categoria</th><th>Empréstimos</th><th>Situação</th></tr></thead>
+      : `<p class="contagem">${lista.length} de ${cadastrados.length} leitor(es)</p><table><thead><tr><th>Nome</th><th>RA / matrícula</th><th>Telefone</th><th>Categoria</th><th>Empréstimos</th><th>Situação</th></tr></thead>
         <tbody>${lista
           .map(
-            (l) => `<tr><td>${esc(l.nome)}<br><small>${esc(l.email)}</small></td><td>${esc(l.matricula)}</td><td>${esc(l.categoria)}</td>
+            (l) => `<tr><td>${esc(l.nome)}<br><small>${esc(l.email)}</small></td><td>${esc(l.matricula)}</td><td>${esc(telefoneBR(l.telefone))}</td><td>${esc(l.categoria)}</td>
             <td>${l.emprestimosAtivos} / ${l.limiteObras}</td>
             <td><span class="selo ${l.podeEmprestar ? "verde" : "vermelho"}">${l.podeEmprestar ? "Pode emprestar" : l.possuiPendencias ? "Com pendências" : "Limite atingido"}</span></td></tr>`,
           )
@@ -413,7 +420,7 @@ export async function mostrarLeitores(raiz: HTMLElement): Promise<void> {
   $("#novo-leitor", raiz).addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const v = (id: string): string => $<HTMLInputElement>(`#${id}`, raiz).value;
-    const dados = { nome: v("nome"), email: v("email"), senha: v("senha"), matricula: v("matricula"), categoriaId: Number(v("categoria")) };
+    const dados = { nome: v("nome"), email: v("email"), senha: v("senha"), matricula: v("matricula"), telefone: v("telefone"), categoriaId: Number(v("categoria")) };
     if (await tentar(() => api.cadastrarLeitor(dados), "Leitor cadastrado.")) {
       ($("#novo-leitor", raiz) as HTMLFormElement).reset();
       await carregar();
@@ -437,5 +444,5 @@ function normalizarBusca(t: string): string {
 
 export function filtrarLeitores(leitores: Leitor[], termo: string): Leitor[] {
   const t = normalizarBusca(termo);
-  return t ? leitores.filter((l) => normalizarBusca(`${l.nome} ${l.matricula} ${l.email}`).includes(t)) : leitores;
+  return t ? leitores.filter((l) => normalizarBusca(`${l.nome} ${l.matricula} ${l.email} ${l.telefone ?? ""}`).includes(t)) : leitores;
 }

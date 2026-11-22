@@ -53,7 +53,7 @@ export const api = {
     guardarSessao(s);
     return s;
   },
-  async autocadastrar(d: { nome: string; email: string; matricula: string; senha: string }): Promise<Sessao> {
+  async autocadastrar(d: { nome: string; email: string; matricula: string; telefone: string; senha: string }): Promise<Sessao> {
     const s = await chamar<Sessao>("POST", "/api/cadastro", d);
     guardarSessao(s);
     return s;
@@ -81,7 +81,7 @@ export const api = {
   // leitores
   listarCategorias: () => chamar<Categoria[]>("GET", "/api/categorias"),
   listarLeitores: () => chamar<Leitor[]>("GET", "/api/leitores"),
-  cadastrarLeitor: (d: { nome: string; email: string; senha: string; matricula: string; categoriaId: number }) =>
+  cadastrarLeitor: (d: { nome: string; email: string; senha: string; matricula: string; telefone: string; categoriaId: number }) =>
     chamar<Leitor>("POST", "/api/leitores", d),
 
   // circulação

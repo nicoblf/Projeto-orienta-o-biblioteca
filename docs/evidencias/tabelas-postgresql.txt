@@ -9,3 +9,9 @@
  public | usuario          | table | biblioteca
 (6 rows)
 
+     tipo      | count 
+---------------+-------
+ LEITOR        |     5
+ BIBLIOTECARIO |     1
+(2 rows)
+

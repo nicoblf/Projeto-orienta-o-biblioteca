@@ -22,7 +22,7 @@ public class LeitorControlador implements Controlador {
 
         r.adicionar("POST", "/api/leitores", Perfil.BIBLIOTECARIO, ctx -> {
             Leitor l = leitores.cadastrar(ctx.texto("nome"), ctx.texto("email"), ctx.texto("senha"),
-                    ctx.texto("matricula"), ctx.inteiro("categoriaId"));
+                    ctx.texto("matricula"), ctx.inteiro("categoriaId"), ctx.texto("telefone"));
             return Resposta.criado(Apresentacao.leitor(l));
         });
     }

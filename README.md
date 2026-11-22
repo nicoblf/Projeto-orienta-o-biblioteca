@@ -53,7 +53,7 @@ frontend/       interface em TypeScript + nginx (Dockerfile, nginx.conf)
 docs/           documentação da Fase 3 e evidências de execução
 ```
 
-Documentação completa: [docs/Documentacao_Fase3.md](docs/Documentacao_Fase3.md)
+Documentação completa: [docs/Documentacao_Fase3.pdf](docs/Documentacao_Fase3.pdf) (fonte em `docs/Documentacao_Fase3.html`)
 
 ## Recursos de interface adicionados
 

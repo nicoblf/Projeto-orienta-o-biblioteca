@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Sistema de Controle de Biblioteca — Fase 3: Implementação</title>
+<style>
+  @page { size: A4; margin: 22mm 20mm 20mm 20mm; }
+  :root { --azul: #1f3a5f; --azul2: #2f5d8f; --claro: #e8eef6; --borda: #cfd8e3; --cinza: #56626f; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Calibri, Arial, sans-serif; font-size: 10.6pt; line-height: 1.5; color: #1d2733; margin: 0; }
+  h1, h2, h3, h4 { color: var(--azul); line-height: 1.25; }
+  h2 { font-size: 17pt; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--azul); }
+  h3 { font-size: 12.5pt; margin: 18px 0 6px; break-after: avoid; }
+  h4 { break-after: avoid; }
+  h4 { font-size: 11pt; margin: 12px 0 4px; }
+  p { margin: 6px 0; text-align: justify; }
+  .secao { break-before: page; }
+  .nao-quebrar { break-inside: avoid; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 9.4pt; }
+  th { background: var(--azul); color: #fff; text-align: left; padding: 6px 7px; font-weight: 600; }
+  td { padding: 5px 7px; border-bottom: 1px solid var(--borda); vertical-align: top; }
+  tr:nth-child(even) td { background: #f6f8fb; }
+  tr { break-inside: avoid; }
+  code { font-family: Consolas, "Cascadia Mono", monospace; font-size: 8.9pt; background: var(--claro); padding: 0 4px; border-radius: 3px; }
+  pre { font-family: Consolas, "Cascadia Mono", monospace; font-size: 8.4pt; line-height: 1.38; background: #f4f6f9; border: 1px solid var(--borda);
+        border-left: 4px solid var(--azul2); padding: 8px 10px; white-space: pre-wrap; margin: 6px 0 12px; break-inside: avoid; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  figure { margin: 10px 0 16px; text-align: center; break-inside: avoid; }
+  figure img { max-width: 100%; border: 1px solid var(--borda); border-radius: 4px; }
+  figure.media img { max-height: 104mm; }
+  figure.alta img { max-height: 200mm; }
+  figcaption { font-size: 9pt; color: var(--cinza); font-style: italic; margin-top: 4px; }
+  ul, ol { margin: 4px 0 8px; padding-left: 22px; }
+  li { margin: 2px 0; }
+  .nota { background: var(--claro); border-left: 4px solid var(--azul2); padding: 8px 12px; margin: 10px 0; font-size: 9.8pt; break-inside: avoid; }
+  .ok { color: #1e7a4a; font-weight: 700; }
+  .pend { color: #8a6100; font-weight: 700; }
+  .tag { display: inline-block; font-size: 8pt; font-weight: 700; padding: 0 6px; border-radius: 8px; background: var(--claro); color: var(--azul); }
+
+  /* capa */
+  .capa { height: 253mm; display: flex; flex-direction: column; justify-content: space-between; text-align: center; padding: 6mm 0; }
+  .capa .inst { font-size: 13pt; font-weight: 700; color: var(--azul); letter-spacing: .3px; }
+  .capa .disc { font-size: 11.5pt; color: var(--cinza); margin-top: 4px; }
+  .capa h1 { font-size: 27pt; margin: 0; letter-spacing: .5px; }
+  .capa .fase { font-size: 15pt; color: var(--azul2); margin-top: 8px; }
+  .capa .faixa { height: 4px; width: 60%; margin: 18px auto; background: var(--azul); border-radius: 2px; }
+  .capa .autores { font-size: 12pt; line-height: 1.9; }
+  .capa .prof { font-size: 11.5pt; margin-top: 14px; }
+  .capa .local { font-size: 11pt; color: var(--cinza); }
+
+  /* sumário */
+  .sumario ol { list-style: none; padding: 0; }
+  .sumario li { display: flex; gap: 8px; padding: 4px 0; border-bottom: 1px dotted var(--borda); font-size: 11pt; }
+  .sumario li.sub { padding-left: 22px; font-size: 10.2pt; color: #33414f; }
+  .sumario .n { min-width: 34px; font-weight: 700; color: var(--azul); }
+
+  /* cartões de classe */
+  .classe { border: 1px solid var(--borda); border-radius: 6px; margin: 10px 0; break-inside: avoid; overflow: hidden; }
+  .classe .cab { background: var(--azul); color: #fff; padding: 5px 10px; font-weight: 700; display: flex; justify-content: space-between; }
+  .classe .cab small { font-weight: 400; opacity: .9; }
+  .classe .corpo { display: grid; grid-template-columns: 1fr 1fr; }
+  .classe .corpo > div { padding: 6px 10px; font-size: 9.3pt; }
+  .classe .corpo > div + div { border-left: 1px solid var(--borda); }
+  .classe .resp { grid-column: 1 / -1; border-top: 1px solid var(--borda); background: #f6f8fb; }
+  .classe b.rot { display: block; color: var(--azul); font-size: 8.6pt; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+  .classe ul { margin: 0; padding-left: 16px; }
+
+  /* arquitetura */
+  .arq { display: flex; align-items: stretch; justify-content: center; gap: 0; margin: 12px 0 6px; break-inside: avoid; }
+  .arq .caixa { border: 2px solid var(--azul); border-radius: 8px; padding: 8px 10px; width: 150px; text-align: center; font-size: 9pt; background: #fff; }
+  .arq .caixa strong { display: block; color: var(--azul); font-size: 10pt; margin-bottom: 3px; }
+  .arq .caixa.cont { background: var(--claro); }
+  .arq .seta { align-self: center; padding: 0 6px; color: var(--azul); font-size: 9pt; text-align: center; width: 78px; }
+  .arq .seta span { display: block; font-size: 16pt; line-height: 1; }
+  .moldura { border: 2px dashed var(--azul2); border-radius: 10px; padding: 10px 8px 6px; position: relative; display: flex; gap: 0; }
+  .moldura > .titulo { position: absolute; top: -10px; left: 12px; background: #fff; padding: 0 6px; font-size: 8.6pt; color: var(--azul2); font-weight: 700; }
+
+  .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .duas figure { margin: 6px 0; }
+</style>
+</head>
+<body>
+
+<!-- ======================= CAPA ======================= -->
+<section class="capa">
+  <div>
+    <div class="inst">CENTRO UNIVERSITÁRIO CAMPO LIMPO PAULISTA – UNIFACCAMP</div>
+    <div class="disc">Projeto Interdisciplinar de Orientação a Objetos</div>
+  </div>
+  <div>
+    <h1>SISTEMA DE CONTROLE<br>DE BIBLIOTECA</h1>
+    <div class="faixa"></div>
+    <div class="fase">Fase 3 — Implementação</div>
+    <div class="disc" style="margin-top:6px">Primeira versão funcional do sistema modelado na Fase 2</div>
+  </div>
+  <div>
+    <div class="autores">José Francisco — RA 33759<br>Nicolas Beltranelo — RA 33732</div>
+    <div class="prof">Prof. Marcio Cruz</div>
+  </div>
+  <div class="local">Campo Limpo Paulista<br>2026</div>
+</section>
+
+<!-- ======================= SUMÁRIO ======================= -->
+<section class="secao sumario">
+  <h2>Sumário</h2>
+  <ol>
+    <li><span class="n">1.1</span>Identificação do projeto</li>
+    <li><span class="n">1.2</span>Linguagem e ferramentas utilizadas</li>
+    <li class="sub">Arquitetura em três contêineres · Estrutura do código-fonte · Como executar</li>
+    <li><span class="n">1.3</span>Implementação das classes</li>
+    <li class="sub">Classes do modelo · Camadas de apoio · Interface em TypeScript · Conceitos de POO · Trechos de código</li>
+    <li><span class="n">1.4</span>Funcionalidades implementadas</li>
+    <li class="sub">Regras por categoria · API REST · O que permanece pendente</li>
+    <li><span class="n">1.5</span>Relação entre a modelagem e a implementação</li>
+    <li class="sub">Diagrama de Classes da Fase 2 · Correspondência · Alterações e justificativas</li>
+    <li><span class="n">1.6</span>Dificuldades encontradas e soluções adotadas</li>
+    <li><span class="n">1.7</span>Resultados obtidos</li>
+    <li class="sub">Capturas de tela · Testes automáticos · Execução em console · Banco de dados</li>
+    <li><span class="n">—</span>Síntese: materiais entregues</li>
+    <li><span class="n">—</span>Roteiro da apresentação (15 a 20 minutos)</li>
+  </ol>
+</section>
+
+<!-- ======================= 1.1 ======================= -->
+<section class="secao">
+  <h2>1.1 Identificação do projeto</h2>
+  <table>
+    <tr><th style="width:28%">Item</th><th>Descrição</th></tr>
+    <tr><td><b>Nome do projeto</b></td><td>Sistema de Controle de Biblioteca</td></tr>
+    <tr><td><b>Integrantes</b></td><td>José Francisco (RA 33759) e Nicolas Beltranelo (RA 33732)</td></tr>
+    <tr><td><b>Professor</b></td><td>Marcio Cruz</td></tr>
+    <tr><td><b>Fase</b></td><td>3 — Implementação (primeira versão funcional)</td></tr>
+    <tr><td><b>Repositório</b></td><td><code>github.com/nicoblf/Projeto-orienta-o-biblioteca</code></td></tr>
+  </table>
+
+  <h3>Introdução</h3>
+  <p>Na Fase 1 identificamos que a biblioteca, de pequeno porte, controla o acervo e os empréstimos em fichas de papel ou em planilha. Esse processo manual provoca exemplares sem rastreabilidade, atrasos que ninguém percebe, multas calculadas de cabeça, ausência de fila de reservas e a necessidade de ir até a biblioteca apenas para saber se um livro está disponível. Na Fase 2 transformamos esse problema em requisitos (RF01 a RF11), casos de uso, um Diagrama de Classes e uma arquitetura em camadas empacotada em contêineres Docker.</p>
+  <p>Esta Fase 3 entrega a <b>primeira versão funcional</b> do sistema. Ela registra o acervo (títulos e cópias físicas), os leitores e toda a circulação de exemplares, e aplica automaticamente as regras de empréstimo definidas nas fases anteriores: o exemplar precisa estar livre, o leitor não pode ter atraso nem multa em aberto, o limite de obras da categoria é respeitado, a data de devolução é calculada sozinha e a multa é gerada na devolução com atraso. A consulta ao acervo é pública, pelo navegador, sem login.</p>
+  <p>O sistema foi construído com o <b>backend em Java</b>, onde ficam todas as classes do modelo e as regras de negócio, e a <b>interface em TypeScript</b>, que roda no navegador e conversa com o backend por uma API REST. Os dados ficam gravados em um banco <b>PostgreSQL</b>. Tudo roda em três contêineres Docker, exatamente como a arquitetura da Fase 2 previa.</p>
+
+  <h3>Quem usa o sistema</h3>
+  <table>
+    <tr><th style="width:22%">Ator (Fase 2)</th><th>O que pode fazer nesta versão</th></tr>
+    <tr><td><b>Visitante</b></td><td>Consultar o acervo com busca e filtros (assunto, autor, disponibilidade) sem login; criar a própria conta de leitor.</td></tr>
+    <tr><td><b>Leitor</b> (aluno ou professor)</td><td>Tudo o que o visitante faz, mais: ver seus empréstimos, prazos e multas, receber avisos de atraso com a multa estimada e renovar seus empréstimos.</td></tr>
+    <tr><td><b>Bibliotecário</b></td><td>Cadastrar livros, exemplares e leitores; registrar empréstimos, devoluções e renovações; dar baixa em exemplares; quitar multas; acompanhar atrasos, painel com indicadores e gráficos.</td></tr>
+  </table>
+</section>
+
+<!-- ======================= 1.2 ======================= -->
+<section class="secao">
+  <h2>1.2 Linguagem e ferramentas utilizadas</h2>
+  <table>
+    <tr><th style="width:30%">Item</th><th>Utilizado</th></tr>
+    <tr><td><b>Linguagem do backend</b> (classes e regras de negócio)</td><td><b>Java 21</b>, usando somente o JDK, sem frameworks.</td></tr>
+    <tr><td><b>Linguagem da interface</b></td><td><b>TypeScript 5</b> em modo estrito (compilado para JavaScript pelo <code>tsc</code>), HTML e CSS. Sem framework de interface.</td></tr>
+    <tr><td><b>Banco de dados</b></td><td><b>PostgreSQL 16</b>, acessado por JDBC.</td></tr>
+    <tr><td><b>Ambiente / editor</b></td><td>Visual Studio Code, Docker Desktop, Git e GitHub.</td></tr>
+    <tr><td><b>Execução</b></td><td><b>Docker Compose</b> com 3 contêineres: <code>db</code>, <code>backend</code> e <code>frontend</code>.</td></tr>
+    <tr><td><b>Recursos do JDK usados</b></td><td><code>com.sun.net.httpserver</code> (servidor HTTP), <code>java.sql</code> (JDBC), <code>java.time</code> (datas e prazos), <code>javax.crypto</code> PBKDF2 (hash de senhas), <code>java.util</code> (coleções).</td></tr>
+    <tr><td><b>Bibliotecas externas</b></td><td>Java: apenas o <b>driver JDBC do PostgreSQL</b> (42.7.4). TypeScript: apenas o compilador <code>typescript</code>, usado só no desenvolvimento.</td></tr>
+    <tr><td><b>Servidor da interface</b></td><td><b>nginx</b>: entrega os arquivos da interface e repassa as chamadas <code>/api/</code> ao backend.</td></tr>
+    <tr><td><b>Ferramentas de apoio</b></td><td>PlantUML (diagramas da Fase 2); Google Chrome (testes da interface e capturas de tela).</td></tr>
+  </table>
+  <p>Entre as alternativas levantadas na Fase 1 (Java ou C# no backend; HTML/JS ou TypeScript na interface; PostgreSQL ou MySQL), o grupo escolheu <b>Java + TypeScript + PostgreSQL</b>, todos em contêineres.</p>
+
+  <h3>Arquitetura em três contêineres</h3>
+  <div class="arq" style="flex-direction:column;align-items:center">
+    <div class="caixa" style="width:300px"><strong>Navegador do usuário</strong>Interface em TypeScript: consulta, balcão, painel, área do leitor</div>
+    <div class="seta" style="width:auto;padding:4px 0"><span>↓</span>HTTP · porta 8080</div>
+    <div class="moldura">
+      <span class="titulo">Docker Compose</span>
+      <div class="caixa cont"><strong>frontend</strong>nginx<br>arquivos da interface<br>proxy de <code>/api/</code></div>
+      <div class="seta"><span>→</span>REST / JSON</div>
+      <div class="caixa cont"><strong>backend</strong>Java 21<br>Controladores → Serviços → Repositórios → Modelo</div>
+      <div class="seta"><span>→</span>JDBC / SQL</div>
+      <div class="caixa cont"><strong>db</strong>PostgreSQL 16<br>volume <code>pgdata</code> (dados persistentes)</div>
+    </div>
+  </div>
+  <p style="text-align:center"><small><i>Figura 1 — Arquitetura implementada (segue a Figura 3 da Fase 2: Interface → Lógica → Dados).</i></small></p>
+  <p>Somente o <code>frontend</code> publica uma porta (8080). O backend e o banco ficam acessíveis apenas na rede interna do Docker. O <code>db</code> tem verificação de saúde (<i>healthcheck</i>) e o backend só sobe depois que o banco está pronto. O volume <code>pgdata</code> mantém os dados mesmo se os contêineres forem recriados.</p>
+
+  <h3>Estrutura do código-fonte</h3>
+<pre><code>sistema-biblioteca/
+├─ docker-compose.yml          3 serviços: db, backend, frontend
+├─ README.md                   como executar, contas de demonstração
+├─ backend/                    Java 21 — 44 arquivos, ~3.100 linhas
+│  ├─ Dockerfile               compila com o JDK e executa com o JRE
+│  └─ src/biblioteca/
+│     ├─ modelo/               classes do Diagrama de Classes (Fase 2)
+│     ├─ repositorio/          armazenamento em memória + gravação no PostgreSQL
+│     ├─ servico/              orquestração dos casos de uso
+│     ├─ web/                  roteador HTTP, controladores, perfis de acesso
+│     ├─ util/                 Json (leitor/escritor), SenhaUtil (PBKDF2)
+│     ├─ excecao/              exceções de regra, recurso, acesso e persistência
+│     ├─ Aplicacao.java        monta as camadas
+│     ├─ Main.java             ponto de entrada
+│     ├─ DadosIniciais.java    carga de demonstração (dados fictícios)
+│     ├─ Demonstracao.java     roteiro das regras no console
+│     └─ TesteRegras.java      29 verificações automáticas
+├─ frontend/                   TypeScript — 11 módulos, ~1.200 linhas
+│  ├─ Dockerfile, nginx.conf
+│  ├─ index.html, styles.css
+│  └─ src/                     api, tipos, telas, filtros, gráficos, avisos
+└─ docs/                       esta documentação e as evidências</code></pre>
+
+  <h3>Como executar</h3>
+  <ol>
+    <li>Instalar o Docker Desktop.</li>
+    <li>Na pasta <code>sistema-biblioteca</code>, executar <code>docker compose up --build</code>.</li>
+    <li>Abrir <code>http://localhost:8080</code> no navegador.</li>
+    <li>Para voltar aos dados iniciais: <code>docker compose down -v</code> e subir de novo.</li>
+  </ol>
+  <table class="nao-quebrar">
+    <tr><th>Perfil (dados fictícios)</th><th>E-mail</th><th>Senha</th><th>Situação inicial</th></tr>
+    <tr><td>Bibliotecária Maria</td><td>bibliotecario@biblioteca.com</td><td>admin123</td><td>—</td></tr>
+    <tr><td>Ana (aluna, RA2024001)</td><td>ana@aluno.com</td><td>leitor123</td><td>1 empréstimo em dia</td></tr>
+    <tr><td>Bruno (aluno, RA2024002)</td><td>bruno@aluno.com</td><td>leitor123</td><td>empréstimo com 13 dias de atraso</td></tr>
+    <tr><td>Carla (professora, PROF0001)</td><td>carla@escola.com</td><td>leitor123</td><td>no limite de 5 obras</td></tr>
+    <tr><td>Diego (aluno, RA2024003)</td><td>diego@aluno.com</td><td>leitor123</td><td>multa de R$ 3,00 em aberto</td></tr>
+  </table>
+</section>
+
+<!-- ======================= 1.3 ======================= -->
+<section class="secao">
+  <h2>1.3 Implementação das classes</h2>
+  <p>As classes do pacote <code>backend/src/biblioteca/modelo</code> correspondem uma a uma às classes do Diagrama de Classes da Fase 2, com os mesmos nomes, atributos, métodos e relacionamentos. Todos os atributos são privados (encapsulamento) e as regras de negócio ficam dentro dessas classes. Por exemplo, quem decide se um leitor pode emprestar é o próprio <code>Leitor</code>, e quem calcula o atraso é o próprio <code>Emprestimo</code>.</p>
+
+  <h3>Classes do modelo</h3>
+
+  <div class="classe"><div class="cab">Usuario <small>classe abstrata · implementa Identificavel</small></div><div class="corpo">
+    <div><b class="rot">Principais atributos</b><ul><li><code>id: int</code></li><li><code>nome: String</code></li><li><code>email: String</code></li><li><code>senhaHash: String</code> (nunca a senha em texto)</li></ul></div>
+    <div><b class="rot">Principais métodos</b><ul><li><code>autenticar(senha): boolean</code></li><li><code>atualizarDados(nome, email): void</code></li><li><code>getPerfil(): String</code> (abstrato)</li></ul></div>
+    <div class="resp"><b class="rot">Responsabilidade</b>Reúne o que é comum a quem tem login: identificação, e-mail e senha criptografada com PBKDF2 e sal aleatório. Valida nome e e-mail no construtor. Não pode ser instanciada; cada subclasse informa seu perfil (polimorfismo).</div>
+  </div></div>
+
+  <div class="classe"><div class="cab">Leitor <small>herda de Usuario</small></div><div class="corpo">
+    <div><b class="rot">Principais atributos</b><ul><li><code>matricula: String</code> (RA, única)</li><li><code>telefone: String</code> (DDD + número)</li><li><code>categoria: CategoriaLeitor</code></li><li><code>emprestimos: List&lt;Emprestimo&gt;</code></li></ul></div>
+    <div><b class="rot">Principais métodos</b><ul><li><code>possuiPendencias(): boolean</code></li><li><code>podeEmprestar(): boolean</code></li><li><code>consultarEmprestimos(): List&lt;Emprestimo&gt;</code></li><li><code>qtdEmprestimosAtivos()</code>, <code>possuiMultaEmAberto()</code></li></ul></div>
+    <div class="resp"><b class="rot">Responsabilidade</b>Representa o aluno ou professor que retira obras. Sabe dizer, sozinho, se tem empréstimo atrasado ou multa em aberto (pendência) e se ainda cabe outra obra no limite da sua categoria. Essas duas respostas automatizam a regra RF08.</div>
+  </div></div>
+
+  <div class="classe"><div class="cab">Bibliotecario <small>herda de Usuario</small></div><div class="corpo">
+    <div><b class="rot">Principais atributos</b><ul><li><code>registroFuncional: String</code></li></ul></div>
+    <div><b class="rot">Principais métodos</b><ul><li><code>registrarEmprestimo(leitor, exemplar): Emprestimo</code></li><li><code>registrarDevolucao(emprestimo): void</code></li></ul></div>
+    <div class="resp"><b class="rot">Responsabilidade</b>Operador do balcão e único perfil que registra empréstimos e devoluções (decisão da Fase 2). Antes de criar o empréstimo, confere exemplar livre (RF07), pendências do leitor e limite de obras (RF08). Cada empréstimo guarda qual bibliotecário o registrou.</div>
+  </div></div>
+
+  <div class="classe"><div class="cab">CategoriaLeitor <small>implementa Identificavel</small></div><div class="corpo">
+    <div><b class="rot">Principais atributos</b><ul><li><code>nome: String</code></li><li><code>prazoDias: int</code></li><li><code>limiteObras: int</code></li><li><code>valorMultaDiaria: double</code></li><li><code>limiteRenovacoes: int</code></li></ul></div>
+    <div><b class="rot">Principais métodos</b><ul><li>Construtor com validação (valores positivos)</li><li>Getters de cada regra</li></ul></div>
+    <div class="resp"><b class="rot">Responsabilidade</b>Guarda as regras que variam por tipo de leitor. Aluno e professor não são subclasses: são duas instâncias desta classe com valores diferentes, o que permite mudar regras sem mudar código.</div>
+  </div></div>
+
+  <div class="classe"><div class="cab">Livro <small>implementa Identificavel · compõe Exemplar</small></div><div class="corpo">
+    <div><b class="rot">Principais atributos</b><ul><li><code>titulo, autor, editora: String</code></li><li><code>isbn: String</code> (único)</li><li><code>assunto: String</code></li><li><code>exemplares: List&lt;Exemplar&gt;</code></li></ul></div>
+    <div><b class="rot">Principais métodos</b><ul><li><code>adicionarExemplar(codigoTombo): Exemplar</code></li><li><code>qtdDisponiveis(): int</code></li><li><code>qtdTotal(): int</code> (exclui baixados)</li></ul></div>
+    <div class="resp"><b class="rot">Responsabilidade</b>Representa o <b>título</b> da obra. É o único lugar onde um <code>Exemplar</code> é criado (composição): o exemplar não existe sem o seu livro. Responde quantas cópias estão livres, o que alimenta a consulta pública.</div>
+  </div></div>
+
+  <div class="classe"><div class="cab">Exemplar <small>implementa Identificavel</small></div><div class="corpo">
+    <div><b class="rot">Principais atributos</b><ul><li><code>codigoTombo: String</code> (único)</li><li><code>situacao: SituacaoExemplar</code></li><li><code>dataBaixa: LocalDate</code></li><li><code>motivoBaixa: String</code></li><li><code>livro: Livro</code></li></ul></div>
+    <div><b class="rot">Principais métodos</b><ul><li><code>estaDisponivel(): boolean</code></li><li><code>alterarSituacao(s): void</code></li><li><code>registrarBaixa(motivo): void</code></li></ul></div>
+    <div class="resp"><b class="rot">Responsabilidade</b>Cópia física, o objeto que de fato é emprestado. Controla seu próprio estado: não aceita alteração depois de baixado e não pode ser baixado enquanto está emprestado (RF10).</div>
+  </div></div>
+
+  <div class="classe"><div class="cab">SituacaoExemplar <small>enumeração</small></div><div class="corpo">
+    <div><b class="rot">Valores</b><code>DISPONIVEL</code>, <code>EMPRESTADO</code>, <code>RESERVADO</code>, <code>BAIXADO</code></div>
+    <div><b class="rot">Uso</b>Atributo <code>situacao</code> do <code>Exemplar</code></div>
+    <div class="resp"><b class="rot">Responsabilidade</b>Lista fechada dos estados possíveis de uma cópia física, evitando textos soltos e erros de digitação.</div>
+  </div></div>
+
+  <div class="classe"><div class="cab">Emprestimo <small>classe central · implementa Identificavel</small></div><div class="corpo">
+    <div><b class="rot">Principais atributos</b><ul><li><code>dataEmprestimo, dataPrevista, dataDevolucao: LocalDate</code></li><li><code>qtdRenovacoes: int</code></li><li><code>leitor</code>, <code>exemplar</code>, <code>bibliotecario</code></li><li><code>multa: Multa</code> (0..1)</li></ul></div>
+    <div><b class="rot">Principais métodos</b><ul><li><code>calcularDataPrevista(): LocalDate</code></li><li><code>renovar(): boolean</code></li><li><code>registrarDevolucao(data): void</code></li><li><code>estaAtrasado(): boolean</code>, <code>diasAtraso(): int</code></li><li><code>multaEstimada(): double</code></li><li><code>motivoImpedimentoRenovacao(): String</code></li></ul></div>
+    <div class="resp"><b class="rot">Responsabilidade</b>Liga quem retirou (Leitor), o que foi retirado (Exemplar) e quem registrou (Bibliotecario). Calcula o prazo pela categoria (RF05), soma o prazo na renovação dentro do limite (RF06), conta os dias de atraso e, na devolução com atraso, cria a <code>Multa</code> automaticamente (RF09). Enquanto o livro não volta, informa a multa estimada do dia.</div>
+  </div></div>
+
+  <div class="classe"><div class="cab">Multa <small>implementa Identificavel</small></div><div class="corpo">
+    <div><b class="rot">Principais atributos</b><ul><li><code>valor: double</code></li><li><code>dataGeracao: LocalDate</code></li><li><code>paga: boolean</code></li><li><code>emprestimo: Emprestimo</code></li></ul></div>
+    <div><b class="rot">Principais métodos</b><ul><li><code>calcularValor(): double</code> = dias de atraso × multa diária</li><li><code>quitar(): void</code></li></ul></div>
+    <div class="resp"><b class="rot">Responsabilidade</b>Valor gerado por uma devolução com atraso. Só o <code>Emprestimo</code> a cria (construtor restrito ao pacote). Enquanto não está paga, bloqueia novos empréstimos e renovações do leitor.</div>
+  </div></div>
+
+  <div class="classe"><div class="cab">Reserva <small>versão posterior (RF11)</small></div><div class="corpo">
+    <div><b class="rot">Principais atributos</b><ul><li><code>dataSolicitacao: LocalDate</code></li><li><code>posicaoFila: int</code></li><li><code>ativa: boolean</code></li><li><code>leitor</code>, <code>livro</code></li></ul></div>
+    <div><b class="rot">Principais métodos</b><ul><li><code>notificar(): void</code></li><li><code>cancelar(): void</code></li></ul></div>
+    <div class="resp"><b class="rot">Responsabilidade</b>Pedido de um leitor por um título sem exemplar livre. A classe existe conforme o diagrama, para a estrutura já comportar a evolução, mas ainda não está ligada às telas nem ao banco (pendente).</div>
+  </div></div>
+
+  <div class="classe"><div class="cab">Identificavel <small>interface</small></div><div class="corpo">
+    <div><b class="rot">Métodos</b><code>getId()</code>, <code>setId(int)</code></div>
+    <div><b class="rot">Implementada por</b>Usuario, CategoriaLeitor, Livro, Exemplar, Emprestimo, Multa, Reserva</div>
+    <div class="resp"><b class="rot">Responsabilidade</b>Contrato que permite ao repositório genérico <code>RepositorioMemoria&lt;T extends Identificavel&gt;</code> guardar e buscar qualquer entidade pelo identificador gerado no banco.</div>
+  </div></div>
+
+  <h3>Camadas de apoio (arquitetura da Fase 2)</h3>
+  <p>Seguindo a arquitetura da Fase 2 (Controladores → Serviços → Repositórios), o modelo é cercado por três camadas. Nenhuma delas repete regra de negócio: elas só localizam os objetos, chamam os métodos do modelo e gravam o resultado.</p>
+  <table>
+    <tr><th style="width:15%">Pacote</th><th style="width:38%">Classes</th><th>Papel</th></tr>
+    <tr><td><code>repositorio</code></td><td><code>RepositorioMemoria&lt;T&gt;</code> (genérica); <code>UsuarioRepositorio</code>, <code>CategoriaRepositorio</code>, <code>LivroRepositorio</code>, <code>ExemplarRepositorio</code>, <code>EmprestimoRepositorio</code>, <code>MultaRepositorio</code>; <code>Banco</code></td><td>Mantêm os objetos em memória e gravam cada alteração no PostgreSQL (<code>INSERT</code>/<code>UPDATE</code>). Na partida, <code>Banco</code> cria as tabelas e os repositórios recarregam tudo, na ordem das dependências.</td></tr>
+    <tr><td><code>servico</code></td><td><code>AcervoServico</code>, <code>LeitorServico</code>, <code>CirculacaoServico</code>, <code>AutenticacaoServico</code></td><td>Um serviço por grupo de casos de uso: cadastros do acervo; cadastro e autocadastro de leitores; empréstimo, devolução, renovação, multas e painel; login e sessões.</td></tr>
+    <tr><td><code>web</code></td><td><code>Roteador</code>, <code>Contexto</code>, <code>Resposta</code>, <code>Perfil</code>, <code>Apresentacao</code>, interface <code>Controlador</code> e quatro controladores</td><td>API REST em JSON. O roteador verifica o perfil exigido (público, autenticado, leitor, bibliotecário) e traduz as exceções em códigos HTTP (401, 403, 404, 422). <code>Apresentacao</code> decide o que cada perfil enxerga: a consulta pública nunca mostra dados de leitores.</td></tr>
+    <tr><td><code>util</code></td><td><code>Json</code>, <code>SenhaUtil</code></td><td>Leitura e escrita de JSON sem biblioteca externa; hash de senhas com PBKDF2 (65.000 iterações, sal de 16 bytes).</td></tr>
+    <tr><td><code>excecao</code></td><td><code>RegraNegocioException</code>, <code>RecursoNaoEncontradoException</code>, <code>AcessoNegadoException</code>, <code>ErroPersistenciaException</code></td><td>Cada tipo de falha vira uma mensagem clara em português para o usuário.</td></tr>
+  </table>
+
+  <h3>Interface em TypeScript</h3>
+  <table>
+    <tr><th style="width:24%">Módulo</th><th>Responsabilidade</th></tr>
+    <tr><td><code>tipos.ts</code></td><td>Interfaces que espelham as classes Java como chegam da API (<code>Livro</code>, <code>Exemplar</code>, <code>Leitor</code>, <code>Emprestimo</code>, <code>Multa</code>, <code>Painel</code>).</td></tr>
+    <tr><td><code>api.ts</code></td><td>Todas as chamadas à API, com o token de sessão; transforma erros em mensagens.</td></tr>
+    <tr><td><code>main.ts</code></td><td>Menu e navegação conforme o perfil logado.</td></tr>
+    <tr><td><code>visao-consulta.ts</code></td><td>Consulta pública ao acervo.</td></tr>
+    <tr><td><code>visao-login.ts</code></td><td>Login e criação de conta de leitor.</td></tr>
+    <tr><td><code>visao-leitor.ts</code></td><td>Área do leitor: empréstimos, multas, avisos e renovação.</td></tr>
+    <tr><td><code>visao-bibliotecario.ts</code></td><td>Painel, balcão, atrasos, acervo e leitores.</td></tr>
+    <tr><td><code>filtros-acervo.ts</code></td><td>Filtros por texto, assunto, autor e disponibilidade (reaproveitados em duas telas).</td></tr>
+    <tr><td><code>graficos.ts</code></td><td>Gráficos de rosca, barras e colunas feitos em HTML/SVG, sem biblioteca.</td></tr>
+    <tr><td><code>avisos.ts</code></td><td>Faixas de aviso de atraso e multa, multa estimada e formatação de telefone.</td></tr>
+    <tr><td><code>ui.ts</code></td><td>Funções de apoio: escape de texto (segurança), datas, moeda e mensagens.</td></tr>
+  </table>
+
+  <h3>Conceitos de Programação Orientada a Objetos aplicados</h3>
+  <table>
+    <tr><th style="width:24%">Conceito</th><th>Onde aparece no código</th></tr>
+    <tr><td><b>Classes e objetos</b></td><td>Cada entidade do diagrama é uma classe; cada livro, leitor e empréstimo do sistema é um objeto em memória.</td></tr>
+    <tr><td><b>Encapsulamento</b></td><td>Todos os atributos são <code>private</code>; o estado só muda por métodos que validam a regra (ex.: <code>Exemplar.alterarSituacao</code> recusa mudar um exemplar baixado).</td></tr>
+    <tr><td><b>Construtores com validação</b></td><td><code>Livro</code> exige título, autor, editora, ISBN e assunto; <code>Leitor</code> exige matrícula e categoria e normaliza o telefone; <code>CategoriaLeitor</code> recusa prazos e limites inválidos.</td></tr>
+    <tr><td><b>Herança</b></td><td><code>Leitor extends Usuario</code> e <code>Bibliotecario extends Usuario</code>.</td></tr>
+    <tr><td><b>Classe abstrata</b></td><td><code>Usuario</code> não pode ser instanciada.</td></tr>
+    <tr><td><b>Polimorfismo</b></td><td><code>getPerfil()</code> é abstrato em <code>Usuario</code> e cada subclasse devolve o seu ("LEITOR" ou "BIBLIOTECARIO"); o roteador usa isso para liberar ou negar acesso.</td></tr>
+    <tr><td><b>Composição</b></td><td><code>Livro</code> cria e possui seus <code>Exemplar</code>; o construtor de <code>Exemplar</code> é restrito ao pacote, então só o livro cria cópias.</td></tr>
+    <tr><td><b>Associações com multiplicidade</b></td><td>Leitor 1–0..* Emprestimo (lista no leitor); Emprestimo 1–0..1 Multa; Leitor *–1 CategoriaLeitor.</td></tr>
+    <tr><td><b>Enumeração</b></td><td><code>SituacaoExemplar</code>.</td></tr>
+    <tr><td><b>Interfaces</b></td><td><code>Identificavel</code> (entidades) e <code>Controlador</code> (cada controlador registra suas rotas).</td></tr>
+    <tr><td><b>Classe genérica</b></td><td><code>RepositorioMemoria&lt;T extends Identificavel&gt;</code>, base de todos os repositórios.</td></tr>
+    <tr><td><b>Sobrecarga</b></td><td><code>registrarEmprestimo(leitor, exemplar)</code> e <code>registrarEmprestimo(leitor, exemplar, data)</code>; dois construtores de <code>Leitor</code>.</td></tr>
+    <tr><td><b>Exceções próprias</b></td><td>Hierarquia em <code>excecao/</code>; a regra violada vira mensagem para o usuário.</td></tr>
+  </table>
+
+  <h3>Trechos de código</h3>
+  <h4>Bibliotecario.registrarEmprestimo — regras RF05, RF07 e RF08</h4>
+<pre><code>public Emprestimo registrarEmprestimo(Leitor leitor, Exemplar exemplar, LocalDate dataEmprestimo) {
+    if (!exemplar.estaDisponivel()) {
+        throw new RegraNegocioException("O exemplar " + exemplar.getCodigoTombo()
+                + " não está disponível (situação: " + exemplar.getSituacao() + ").");
+    }
+    if (leitor.possuiPendencias()) {
+        throw new RegraNegocioException(leitor.getNome() + " possui atraso ou multa em aberto.");
+    }
+    if (!leitor.podeEmprestar()) {
+        throw new RegraNegocioException(leitor.getNome() + " atingiu o limite de "
+                + leitor.getCategoria().getLimiteObras() + " obra(s) emprestada(s).");
+    }
+    Emprestimo emprestimo = new Emprestimo(leitor, exemplar, this, dataEmprestimo);
+    exemplar.alterarSituacao(SituacaoExemplar.EMPRESTADO);
+    leitor.adicionarEmprestimo(emprestimo);
+    return emprestimo;
+}</code></pre>
+
+  <h4>Leitor — pendências e limite (RF08)</h4>
+<pre><code>public boolean possuiPendencias() {
+    for (Emprestimo e : emprestimos) {
+        if (e.estaAtrasado()) return true;
+        if (e.getMulta() != null &amp;&amp; !e.getMulta().isPaga()) return true;
+    }
+    return false;
+}
+
+public boolean podeEmprestar() {
+    return !possuiPendencias() &amp;&amp; qtdEmprestimosAtivos() &lt; categoria.getLimiteObras();
+}</code></pre>
+
+  <h4>Emprestimo — devolução, atraso e multa automática (RF06, RF09)</h4>
+<pre><code>public void registrarDevolucao(LocalDate data) {
+    if (!estaAtivo()) {
+        throw new RegraNegocioException("Este empréstimo já foi devolvido em " + dataDevolucao + ".");
+    }
+    this.dataDevolucao = data;
+    if (exemplar.getSituacao() == SituacaoExemplar.EMPRESTADO) {
+        exemplar.alterarSituacao(SituacaoExemplar.DISPONIVEL);
+    }
+    if (diasAtraso() &gt; 0) {
+        this.multa = new Multa(this);          // valor = dias de atraso × multa diária da categoria
+    }
+}
+
+public int diasAtraso() {
+    LocalDate referencia = estaAtivo() ? LocalDate.now() : dataDevolucao;
+    long dias = ChronoUnit.DAYS.between(dataPrevista, referencia);
+    return dias &gt; 0 ? (int) dias : 0;
+}</code></pre>
+
+  <h4>Multa.calcularValor e Livro.qtdDisponiveis</h4>
+<pre><code>public double calcularValor() {                       // Multa
+    double bruto = emprestimo.diasAtraso() * emprestimo.getLeitor().getCategoria().getValorMultaDiaria();
+    return Math.round(bruto * 100.0) / 100.0;
+}
+
+public int qtdDisponiveis() {                         // Livro
+    int total = 0;
+    for (Exemplar e : exemplares) {
+        if (e.estaDisponivel()) total++;
+    }
+    return total;
+}</code></pre>
+</section>
+
+<!-- ======================= 1.4 ======================= -->
+<section class="secao">
+  <h2>1.4 Funcionalidades implementadas</h2>
+  <p>Cada funcionalidade abaixo ataca diretamente um dos problemas levantados na Fase 1. A coluna "Evidência" indica a figura da seção 1.7 que mostra a funcionalidade em execução.</p>
+  <table>
+    <tr><th style="width:18%">Funcionalidade</th><th style="width:9%">Req.</th><th>Como funciona</th><th style="width:21%">Problema da Fase 1 resolvido</th><th style="width:8%">Evid.</th></tr>
+    <tr><td><b>Consultar acervo</b> (público)</td><td>RF04</td><td>Sem login. Busca por título, autor, assunto, ISBN ou editora (ignora acentos) e filtros por assunto, autor e disponibilidade. Mostra "X de Y disponíveis" por título.</td><td>Ter de ir à biblioteca só para saber se há exemplar livre</td><td>Fig. 3, 4</td></tr>
+    <tr><td><b>Criar conta de leitor</b></td><td>RF03</td><td>O visitante informa nome, RA, telefone, e-mail e senha; a conta entra na categoria Aluno e já fica logada. E-mail, RA e telefone são validados.</td><td>Cadastro dependente do balcão</td><td>Fig. 6, 7</td></tr>
+    <tr><td><b>Cadastrar leitor</b> (bibliotecário)</td><td>RF03</td><td>Nome, e-mail, RA/matrícula, telefone, senha inicial e categoria (Aluno ou Professor).</td><td>Não saber quem está com cada obra nem como contatá-lo</td><td>Fig. 21</td></tr>
+    <tr><td><b>Cadastrar livro</b></td><td>RF01</td><td>Título, autor, editora, ISBN (único) e assunto, todos obrigatórios.</td><td>Registros incompletos ou ilegíveis</td><td>Fig. 19</td></tr>
+    <tr><td><b>Cadastrar exemplar</b></td><td>RF02</td><td>Liga uma cópia física, com código de tombo único, a um título.</td><td>Não distinguir título de cópia física</td><td>Fig. 20</td></tr>
+    <tr><td><b>Registrar empréstimo</b></td><td>RF05, RF07, RF08</td><td>Pela matrícula/RA e pelo tombo. Confere exemplar livre, leitor sem atraso nem multa e limite de obras; calcula a data de devolução pela categoria. Dois atendimentos simultâneos não emprestam o mesmo exemplar.</td><td>Empréstimo sem validação; obras sem rastreio</td><td>Fig. 11–15</td></tr>
+    <tr><td><b>Buscar leitor no balcão</b></td><td>RF03, RF05</td><td>Seção recolhível que lista os leitores cadastrados com busca por nome, RA, e-mail ou telefone; mostra situação e o botão "Usar RA", que preenche a matrícula do empréstimo.</td><td>Depender da memória do atendente para achar o leitor</td><td>Fig. 10</td></tr>
+    <tr><td><b>Registrar devolução</b></td><td>RF06, RF09</td><td>Encerra o empréstimo, libera o exemplar e, se houve atraso, gera a multa automaticamente.</td><td>Multas calculadas de cabeça</td><td>Fig. 18</td></tr>
+    <tr><td><b>Renovar empréstimo</b></td><td>RF06</td><td>Soma o prazo da categoria; nega se atingiu o limite de renovações ou se o leitor tem pendência. O leitor renova apenas os próprios.</td><td>Prazos controlados à mão</td><td>Fig. 16</td></tr>
+    <tr><td><b>Avisos de atraso e multa</b></td><td>RF08, RF09</td><td>Faixa vermelha para o leitor ("você tem N empréstimos em atraso, multa estimada R$ X") e para a equipe (lista com nome, RA e telefone de quem atrasou). A multa estimada cresce a cada dia até a devolução.</td><td>Atrasos que ninguém percebe; falta de contato com o leitor</td><td>Fig. 8, 17, 23</td></tr>
+    <tr><td><b>Quitar multa</b></td><td>RF09</td><td>Registra o pagamento; o leitor volta a poder emprestar.</td><td>Controle de pagamento em papel</td><td>Fig. 22</td></tr>
+    <tr><td><b>Atrasos</b></td><td>RF08</td><td>Lista calculada pela data do sistema, com dias de atraso, multa estimada e telefone.</td><td>Atrasos não identificados</td><td>Fig. 17</td></tr>
+    <tr><td><b>Painel com gráficos</b></td><td>—</td><td>Indicadores (empréstimos ativos, atrasos, devoluções do dia, multas, títulos e exemplares) e quatro gráficos: situação dos exemplares, empréstimos por situação, exemplares por assunto e empréstimos dos últimos 7 dias.</td><td>Falta de visão geral da biblioteca</td><td>Fig. 9</td></tr>
+    <tr><td><b>Meus empréstimos</b></td><td>RF04</td><td>O leitor vê seus empréstimos, prazos, renovações, situação e multas (somente os dele).</td><td>Consulta presencial obrigatória</td><td>Fig. 8, 23, 24</td></tr>
+    <tr><td><b>Baixa de exemplar</b></td><td>RF10</td><td>Retira a cópia de circulação com data e motivo, preservando o histórico.</td><td>Obras que somem sem registro</td><td>Fig. 20</td></tr>
+    <tr><td><b>Login e perfis</b></td><td>RNF02, RNF03</td><td>Senhas com PBKDF2 e sal; três perfis com acesso verificado em cada rota. Mesma mensagem para e-mail inexistente e senha errada.</td><td>Acesso indevido a dados</td><td>Fig. 5</td></tr>
+    <tr><td><b>Persistência</b></td><td>RNF10 (parcial)</td><td>Todos os dados no PostgreSQL com volume persistente; nada se perde ao reiniciar os contêineres.</td><td>Fichas sujeitas a perda</td><td>1.7</td></tr>
+  </table>
+
+  <h3>Regras por categoria (dados iniciais)</h3>
+  <table class="nao-quebrar">
+    <tr><th>Categoria</th><th>Prazo</th><th>Limite de obras</th><th>Multa por dia de atraso</th><th>Renovações</th></tr>
+    <tr><td>Aluno</td><td>7 dias</td><td>3</td><td>R$ 1,00</td><td>até 2</td></tr>
+    <tr><td>Professor</td><td>14 dias</td><td>5</td><td>R$ 0,50</td><td>até 3</td></tr>
+  </table>
+  <p><b>Como a multa funciona:</b> enquanto o livro não é devolvido, o empréstimo aparece como "Atrasado (N dias)" com a <b>multa estimada</b> do dia (N × valor diário da categoria). A multa real é gerada no momento da devolução, com o valor fixado naquele dia, e bloqueia novos empréstimos e renovações até que o bibliotecário registre o pagamento. Exemplo da carga inicial: Bruno (aluno) está com 13 dias de atraso, então a estimativa é 13 × R$ 1,00 = R$ 13,00.</p>
+
+  <h3>API REST implementada</h3>
+  <table>
+    <tr><th style="width:9%">Método</th><th style="width:33%">Caminho</th><th style="width:16%">Perfil</th><th>Função</th></tr>
+    <tr><td>GET</td><td><code>/api/livros?q=</code></td><td>público</td><td>Consulta ao acervo com disponibilidade</td></tr>
+    <tr><td>GET</td><td><code>/api/livros/{id}</code></td><td>público</td><td>Detalhe de um título</td></tr>
+    <tr><td>POST</td><td><code>/api/livros</code></td><td>bibliotecário</td><td>Cadastrar livro</td></tr>
+    <tr><td>GET/POST</td><td><code>/api/livros/{id}/exemplares</code></td><td>bibliotecário</td><td>Listar / cadastrar exemplares</td></tr>
+    <tr><td>POST</td><td><code>/api/exemplares/{id}/baixa</code></td><td>bibliotecário</td><td>Baixa de exemplar</td></tr>
+    <tr><td>POST</td><td><code>/api/login</code>, <code>/api/cadastro</code></td><td>público</td><td>Entrar; criar conta de leitor</td></tr>
+    <tr><td>POST / GET</td><td><code>/api/logout</code>, <code>/api/eu</code></td><td>autenticado</td><td>Sair; dados da sessão</td></tr>
+    <tr><td>GET/POST</td><td><code>/api/leitores</code>, <code>/api/categorias</code></td><td>bibliotecário</td><td>Listar e cadastrar leitores; categorias</td></tr>
+    <tr><td>GET/POST</td><td><code>/api/emprestimos</code></td><td>bibliotecário</td><td>Listar (ativos, atrasados, todos) / registrar empréstimo</td></tr>
+    <tr><td>POST</td><td><code>/api/emprestimos/{id}/devolucao</code></td><td>bibliotecário</td><td>Registrar devolução</td></tr>
+    <tr><td>POST</td><td><code>/api/emprestimos/{id}/renovacao</code></td><td>autenticado</td><td>Renovar (leitor só os próprios)</td></tr>
+    <tr><td>GET</td><td><code>/api/meus-emprestimos</code></td><td>leitor</td><td>Empréstimos do leitor logado</td></tr>
+    <tr><td>POST</td><td><code>/api/multas/{id}/quitar</code></td><td>bibliotecário</td><td>Registrar pagamento de multa</td></tr>
+    <tr><td>GET</td><td><code>/api/painel</code></td><td>bibliotecário</td><td>Indicadores do painel</td></tr>
+  </table>
+
+  <h3>O que foi desenvolvido e o que permanece pendente</h3>
+  <table>
+    <tr><th style="width:44%">Item</th><th style="width:16%">Situação</th><th>Observação</th></tr>
+    <tr><td>RF01 a RF10 (cadastros, consulta, empréstimo, devolução, renovação, validações, multa, baixa)</td><td class="ok">Concluído</td><td>Todos com regras no modelo e telas.</td></tr>
+    <tr><td>Persistência em PostgreSQL com volume (3 contêineres)</td><td class="ok">Concluído</td><td>Dados sobrevivem a reinícios.</td></tr>
+    <tr><td>Perfis de acesso e senhas criptografadas (RNF02, RNF03)</td><td class="ok">Concluído</td><td>—</td></tr>
+    <tr><td>Controle de concorrência no empréstimo (RNF07)</td><td class="ok">Concluído</td><td>Bloco sincronizado + índice único no banco.</td></tr>
+    <tr><td>Painel com gráficos, filtros do acervo, busca de leitores, avisos de atraso, telefone</td><td class="ok">Concluído</td><td>Além do mínimo previsto.</td></tr>
+    <tr><td>RF11 — Fila de reservas e aviso na devolução</td><td class="pend">Pendente</td><td>Classe <code>Reserva</code> já existe; falta ligar a telas e banco.</td></tr>
+    <tr><td>RNF10 — Rotina automática de backup do banco</td><td class="pend">Pendente</td><td>Hoje há volume persistente, mas sem cópia periódica.</td></tr>
+    <tr><td>Aviso de vencimento por e-mail ou mensagem</td><td class="pend">Pendente</td><td>O telefone já é cadastrado para permitir isso.</td></tr>
+    <tr><td>Relatórios gerenciais e importação do acervo por planilha</td><td class="pend">Pendente</td><td>—</td></tr>
+    <tr><td>Exclusão/anonimização de dados do leitor (LGPD) e HTTPS</td><td class="pend">Pendente</td><td>Necessários antes de uso real.</td></tr>
+  </table>
+</section>
+
+<!-- ======================= 1.5 ======================= -->
+<section class="secao">
+  <h2>1.5 Relação entre a modelagem e a implementação</h2>
+  <p>O Diagrama de Classes da Fase 2 foi usado como <b>contrato</b> da implementação: primeiro criamos cada classe com os atributos e métodos do diagrama, depois os relacionamentos e só então as camadas de serviço, web e banco ao redor do modelo. A Figura 2 reproduz o diagrama da Fase 2.</p>
+  <figure class="alta"><img src="evidencias/diagrama-classes-fase2.png" alt="Diagrama de Classes da Fase 2"><figcaption>Figura 2 — Diagrama de Classes elaborado na Fase 2 (PlantUML), usado como referência.</figcaption></figure>
+</section>
+
+<section class="secao">
+  <h3>Correspondência entre o diagrama e o código</h3>
+  <table>
+    <tr><th style="width:40%">Elemento do diagrama</th><th>Onde está no código</th></tr>
+    <tr><td>Generalização <code>Usuario ← Leitor, Bibliotecario</code></td><td><code>public abstract class Usuario</code>; <code>Leitor extends Usuario</code>; <code>Bibliotecario extends Usuario</code></td></tr>
+    <tr><td>Composição <code>Livro ◆— Exemplar</code> (1 para 1..*)</td><td><code>Livro.adicionarExemplar()</code> é o único criador; o construtor de <code>Exemplar</code> é restrito ao pacote</td></tr>
+    <tr><td><code>Leitor 1 — 0..* Emprestimo</code> ("realiza")</td><td>Lista <code>Leitor.emprestimos</code>, alimentada em <code>registrarEmprestimo</code></td></tr>
+    <tr><td><code>Exemplar 1 — 0..* Emprestimo</code> + nota "só 1 em aberto" (RF07)</td><td><code>registrarEmprestimo</code> exige <code>exemplar.estaDisponivel()</code>; no banco, índice único parcial <code>um_emprestimo_aberto_por_exemplar</code></td></tr>
+    <tr><td><code>Bibliotecario 1 — 0..* Emprestimo</code> ("registra")</td><td>Atributo <code>Emprestimo.bibliotecario</code></td></tr>
+    <tr><td><code>Emprestimo 1 — 0..1 Multa</code> ("gera")</td><td><code>Emprestimo.multa</code>, criada apenas em <code>registrarDevolucao</code> quando <code>diasAtraso() &gt; 0</code></td></tr>
+    <tr><td><code>Leitor 0..* — 1 CategoriaLeitor</code> ("pertence a")</td><td><code>Leitor.categoria</code>; prazo, limite, multa e renovações vêm dela</td></tr>
+    <tr><td><code>Exemplar → SituacaoExemplar</code></td><td><code>enum SituacaoExemplar</code> com os 4 valores do diagrama</td></tr>
+    <tr><td><code>Leitor — Reserva — Livro</code> (versão posterior)</td><td>Classe <code>Reserva</code> com leitor, livro, data, posição e <code>notificar()</code>/<code>cancelar()</code></td></tr>
+    <tr><td>Métodos do diagrama (<code>autenticar</code>, <code>possuiPendencias</code>, <code>podeEmprestar</code>, <code>consultarEmprestimos</code>, <code>registrarEmprestimo</code>, <code>registrarDevolucao</code>, <code>qtdDisponiveis</code>, <code>estaDisponivel</code>, <code>alterarSituacao</code>, <code>registrarBaixa</code>, <code>calcularDataPrevista</code>, <code>renovar</code>, <code>estaAtrasado</code>, <code>diasAtraso</code>, <code>calcularValor</code>, <code>quitar</code>)</td><td>Todos implementados com o mesmo nome e responsabilidade</td></tr>
+    <tr><td>Arquitetura: Controladores → Serviços → Repositórios → Banco</td><td>Pacotes <code>web</code> → <code>servico</code> → <code>repositorio</code> → PostgreSQL</td></tr>
+  </table>
+
+  <h3>Alterações em relação à modelagem e justificativas</h3>
+  <table>
+    <tr><th style="width:38%">Alteração</th><th>Justificativa</th></tr>
+    <tr><td><code>atualizarDados()</code> passou a receber <code>nome</code> e <code>email</code></td><td>O diagrama não trazia parâmetros; sem eles o método não teria o que atualizar.</td></tr>
+    <tr><td>Datas como <code>LocalDate</code> (diagrama: <code>Date</code>)</td><td><code>java.time.LocalDate</code> é o tipo moderno do Java para datas sem horário e facilita o cálculo de dias de atraso.</td></tr>
+    <tr><td>Versões de <code>registrarEmprestimo</code>/<code>registrarDevolucao</code> que recebem a data</td><td>Permitem carregar dados de demonstração (um atraso, uma multa) e testar as regras sem esperar dias reais.</td></tr>
+    <tr><td>Interface <code>Identificavel</code> e repositório genérico</td><td>O identificador é gerado pelo banco e atribuído ao objeto; a interface deixa um único repositório genérico servir a todas as entidades.</td></tr>
+    <tr><td><code>getPerfil()</code> abstrato; <code>possuiMultaEmAberto()</code>, <code>qtdEmprestimosAtivos()</code>, <code>qtdTotal()</code>, <code>motivoImpedimentoRenovacao()</code></td><td>Métodos de apoio para controlar o acesso por perfil e mostrar ao usuário <b>por que</b> uma operação foi negada.</td></tr>
+    <tr><td>Atributo <code>telefone</code> em <code>Leitor</code></td><td>Necessário para a equipe contatar quem está em atraso; prepara o aviso de vencimento previsto para depois.</td></tr>
+    <tr><td>Método <code>multaEstimada()</code> em <code>Emprestimo</code></td><td>A Fase 2 define que a multa só nasce na devolução. Para avisar o leitor antes, o empréstimo informa quanto seria a multa hoje, sem criar a <code>Multa</code> antes da hora.</td></tr>
+    <tr><td>Autocadastro do leitor (categoria Aluno)</td><td>Na Fase 2 o cadastro era só do bibliotecário. Para reduzir a dependência do balcão, o visitante pode criar a própria conta; categorias com mais privilégios (Professor) continuam só pelo bibliotecário.</td></tr>
+    <tr><td>Métodos <code>restaurar(...)</code> no modelo</td><td>Reconstroem os objetos a partir do banco sem refazer validações nem gerar novo hash de senha.</td></tr>
+    <tr><td>Baixa só de exemplar não emprestado</td><td>Evita deixar um empréstimo aberto para sempre; a devolução é registrada antes da baixa.</td></tr>
+    <tr><td>Java puro (servidor HTTP do JDK + JDBC) em vez de Spring Boot/JPA, citados na Fase 2</td><td>Evitou-se a configuração do framework para concentrar o tempo na orientação a objetos. Os repositórios isolam o armazenamento, então migrar para JPA depois não altera o modelo nem os serviços.</td></tr>
+    <tr><td>Persistência <i>write-through</i>: objetos em memória + gravação imediata no PostgreSQL</td><td>As regras (<code>podeEmprestar()</code>, <code>diasAtraso()</code>...) operam sobre o grafo de objetos do diagrama, como na modelagem; o banco garante que nada se perca.</td></tr>
+  </table>
+</section>
+
+<!-- ======================= 1.6 ======================= -->
+<section class="secao">
+  <h2>1.6 Dificuldades encontradas e soluções adotadas</h2>
+  <table>
+    <tr><th style="width:34%">Dificuldade</th><th>Solução adotada</th></tr>
+    <tr><td><b>Separar título de cópia física</b> (dificuldade 3 da Fase 1)</td><td><code>Livro</code> e <code>Exemplar</code> como classes distintas, ligadas por composição. A disponibilidade é calculada contando os exemplares <code>DISPONIVEL</code>, e o empréstimo é sempre de um exemplar específico (pelo código de tombo).</td></tr>
+    <tr><td><b>Impedir que dois atendimentos emprestem o mesmo exemplar ao mesmo tempo</b></td><td>Duas camadas de proteção: a validação e a gravação ocorrem em um bloco <code>synchronized</code> no <code>Roteador</code>, e o PostgreSQL tem um índice único parcial que proíbe dois empréstimos em aberto do mesmo exemplar. Testamos com duas requisições simultâneas: uma retornou sucesso (201) e a outra foi recusada (422).</td></tr>
+    <tr><td><b>Onde colocar as regras de negócio</b></td><td>Decidimos manter as regras nas classes do modelo (<code>Leitor.podeEmprestar()</code>, <code>Emprestimo.diasAtraso()</code>, <code>Exemplar.registrarBaixa()</code>), como o diagrama sugere. Os serviços apenas localizam objetos e chamam esses métodos.</td></tr>
+    <tr><td><b>Reconstruir os objetos a partir do banco</b></td><td>Criamos métodos <code>restaurar(...)</code> e uma carga em ordem de dependência (categorias, usuários, livros, exemplares, empréstimos, multas). Testado reiniciando apenas o backend: painel, multas e bloqueios continuaram idênticos.</td></tr>
+    <tr><td><b>Backend subindo antes do banco estar pronto</b></td><td><i>Healthcheck</i> no contêiner do banco, <code>depends_on</code> com condição de saúde no Docker Compose e novas tentativas de conexão no <code>Banco</code>, com a mensagem do erro no log.</td></tr>
+    <tr><td><b>Driver JDBC não encontrado dentro do contêiner</b></td><td>A pasta de bibliotecas era criada com permissão errada. Corrigimos o <code>Dockerfile</code> para criar a pasta antes de baixar o driver.</td></tr>
+    <tr><td><b>nginx sem encontrar o backend na partida</b></td><td>Configuramos o resolvedor de nomes do Docker no nginx, para que ele resolva o endereço do backend a cada requisição.</td></tr>
+    <tr><td><b>Testar atraso e multa sem esperar dias</b></td><td>Métodos que recebem a data e carga inicial com um empréstimo já atrasado e uma multa em aberto. Assim as regras aparecem na hora da demonstração.</td></tr>
+    <tr><td><b>Multa "invisível" enquanto o livro não volta</b></td><td>Pela regra, a multa só existe após a devolução, e o leitor atrasado não via valor nenhum. Criamos a multa estimada e faixas de aviso para o leitor e para a equipe, sem mudar a regra da Fase 2.</td></tr>
+    <tr><td><b>Acentos corrompidos</b></td><td>Garantimos UTF-8 na compilação Java (<code>-encoding UTF-8</code>), nas respostas HTTP e no banco. A busca do acervo compara textos sem acento, então "programacao" encontra "Programação".</td></tr>
+    <tr><td><b>Segurança das senhas e dos dados</b></td><td>PBKDF2 com sal aleatório; mensagem idêntica para e-mail inexistente e senha errada; a consulta pública nunca devolve dados de leitores; todo texto vindo do servidor é escapado antes de entrar no HTML.</td></tr>
+    <tr><td><b>Trabalhar sem bibliotecas externas</b></td><td>Escrevemos um leitor/escritor de JSON mínimo (<code>Json.java</code>), um roteador HTTP próprio e gráficos em HTML/SVG. Isso aumentou o código, mas deixou claro o papel de cada classe.</td></tr>
+  </table>
+</section>
+
+<!-- ======================= 1.7 ======================= -->
+<section class="secao">
+  <h2>1.7 Resultados obtidos</h2>
+  <p>As capturas abaixo foram feitas com o sistema rodando nos três contêineres, a partir dos dados iniciais de demonstração (todos fictícios), em 22/11/2026. Os arquivos estão em <code>docs/evidencias/</code>.</p>
+
+  <figure class="media"><h3 style="text-align:left">Visitante: consulta pública e cadastro</h3><img src="evidencias/01-consulta-publica.png"><figcaption>Figura 3 — Consulta pública ao acervo, sem login (RF04): busca, filtros e "X de Y disponíveis" por título.</figcaption></figure>
+  <figure class="media"><img src="evidencias/02-consulta-filtros.png"><figcaption>Figura 4 — Filtros combinados: assunto "Programação" + "Indisponíveis" mostra o título com todos os exemplares emprestados.</figcaption></figure>
+  <figure class="media"><img src="evidencias/03-login.png"><figcaption>Figura 5 — Tela de login; o visitante só vê o botão "Entrar".</figcaption></figure>
+  <figure class="media"><img src="evidencias/04-cadastro-leitor.png"><figcaption>Figura 6 — Criar conta de leitor: nome, RA, telefone com DDD, e-mail e senha.</figcaption></figure>
+  <figure class="media"><img src="evidencias/05-cadastro-concluido.png"><figcaption>Figura 7 — Conta criada: o novo leitor já entra logado na área "Meus empréstimos".</figcaption></figure>
+
+  <figure class="media"><h3 style="text-align:left">Leitor com atraso</h3><img src="evidencias/06-leitor-aviso-atraso.png"><figcaption>Figura 8 — Área do leitor Bruno: aviso de 13 dias de atraso, multa estimada de R$ 13,00 e renovação bloqueada.</figcaption></figure>
+
+  <figure class="alta"><h3 style="text-align:left">Bibliotecário: painel e balcão</h3><img src="evidencias/07-painel-graficos.png"><figcaption>Figura 9 — Painel: aviso de atrasos e multas, indicadores e os quatro gráficos.</figcaption></figure>
+  <figure class="alta"><img src="evidencias/08-balcao-busca-leitor.png"><figcaption>Figura 10 — Balcão: "Buscar leitor cadastrado" aberto, filtrando por "ra2024", com situação de cada leitor e telefone nas linhas de empréstimo.</figcaption></figure>
+  <figure class="media"><img src="evidencias/09-bloqueio-atraso.png"><figcaption>Figura 11 — Empréstimo negado: Bruno possui atraso (RF08).</figcaption></figure>
+  <figure class="media"><img src="evidencias/10-bloqueio-exemplar.png"><figcaption>Figura 12 — Empréstimo negado: o exemplar TB-0001 já está emprestado (RF07).</figcaption></figure>
+  <figure class="media"><img src="evidencias/11-bloqueio-multa.png"><figcaption>Figura 13 — Empréstimo negado: Diego tem multa em aberto (RF08).</figcaption></figure>
+  <figure class="media"><img src="evidencias/12-bloqueio-limite.png"><figcaption>Figura 14 — Empréstimo negado: a professora Carla atingiu o limite de 5 obras (RF08).</figcaption></figure>
+  <figure class="alta"><img src="evidencias/13-emprestimo-registrado.png"><figcaption>Figura 15 — Empréstimo válido registrado para Ana (TB-0008), com data de devolução calculada (RF05).</figcaption></figure>
+  <figure class="alta"><img src="evidencias/14-renovacao.png"><figcaption>Figura 16 — Renovação: o prazo do empréstimo de Ana foi estendido em 7 dias (RF06).</figcaption></figure>
+  <figure class="media"><img src="evidencias/15-atrasos.png"><figcaption>Figura 17 — Tela de atrasos com aviso, telefone do leitor e multa estimada.</figcaption></figure>
+  <figure class="media"><img src="evidencias/16-devolucao-multa.png"><figcaption>Figura 18 — Devolução com atraso: multa de R$ 13,00 gerada automaticamente (RF06, RF09).</figcaption></figure>
+
+  <figure class="alta"><h3 style="text-align:left">Acervo, leitores e multas</h3><img src="evidencias/17-acervo-filtros.png"><figcaption>Figura 19 — Acervo do bibliotecário: cadastro de livro e filtros (assunto "Literatura").</figcaption></figure>
+  <figure class="media"><img src="evidencias/18-exemplares-baixa.png"><figcaption>Figura 20 — Exemplares de "Dom Casmurro": cadastro de exemplar e baixa do TB-0003 com motivo e data (RF02, RF10).</figcaption></figure>
+  <figure class="alta"><img src="evidencias/19-leitores-multas.png"><figcaption>Figura 21 — Leitores e multas: cadastro com telefone, multas em aberto e lista de leitores com busca.</figcaption></figure>
+  <figure class="media"><img src="evidencias/20-multa-quitada.png"><figcaption>Figura 22 — Multa de Diego quitada: o leitor volta a poder emprestar.</figcaption></figure>
+
+  <figure class="media"><h3 style="text-align:left">Leitor após a devolução</h3><img src="evidencias/21-leitor-multa-aberta.png"><figcaption>Figura 23 — Bruno depois da devolução: aviso de multa em aberto e orientação para pagar no balcão.</figcaption></figure>
+  <figure class="media"><img src="evidencias/22-area-do-leitor.png"><figcaption>Figura 24 — Área da leitora Ana: empréstimos em dia, prazos e renovações.</figcaption></figure>
+</section>
+
+<section class="secao">
+  <h3>Testes automáticos das regras</h3>
+  <p>A classe <code>TesteRegras</code> executa 29 verificações sobre o modelo, sem navegador. Comando: <code>docker compose run --rm --no-deps backend java -cp out biblioteca.TesteRegras</code>. Resultado: <b>29 verificações OK, 0 falhas</b>.</p>
+<pre><code>OK   prazo aluno = 7 dias
+OK   prazo professor = 14 dias
+OK   empréstimo de Bruno está atrasado
+OK   dias de atraso de Bruno = 13
+OK   Bruno possui pendências
+OK   Diego possui multa em aberto
+OK   multa de Diego = 3.00
+OK   exemplar emprestado não pode ser emprestado de novo
+OK   leitor com atraso não pode emprestar
+OK   leitor com multa não pode emprestar
+OK   limite de 3 obras do aluno
+OK   Dom Casmurro: 1 de 3 disponível
+OK   exemplar devolvido fica DISPONIVEL
+OK   devolução atrasada gerou multa
+OK   multa de Bruno = 13 x 1.00
+OK   não devolve duas vezes
+OK   após quitar, Bruno pode emprestar
+OK   renovação permitida
+OK   renovação soma o prazo
+OK   2ª renovação
+OK   3ª renovação (limite do professor = 3)
+OK   4ª renovação negada
+OK   exemplar baixado
+OK   exemplar baixado não é emprestado
+OK   senha correta autentica
+OK   senha errada não autentica
+OK   login devolve o usuário
+OK   JSON: texto com aspas e acento
+OK   JSON: escrita
+
+29 verificacoes OK, 0 falha(s).</code></pre>
+
+  <h3>Execução das regras em console</h3>
+  <p>O modo <code>--demo</code> percorre as regras em sequência, só com os objetos em memória, mostrando que o modelo funciona independentemente da interface:</p>
+<pre><code>2. Empréstimo válido (RF05): Ana Lima leva o exemplar TB-0008
+  Registrado. Devolver ate 2026-11-29 | situacao do exemplar: EMPRESTADO
+3. Exemplar já emprestado (RF07)
+  BLOQUEADO: O exemplar TB-0001 não está disponível (situação: EMPRESTADO).
+4. Leitor com atraso (RF08): Bruno Costa
+  BLOQUEADO: Bruno Costa possui atraso ou multa em aberto.
+6. Limite de obras (RF08): Ana Lima (aluna, limite 3)
+  BLOQUEADO: Ana Lima atingiu o limite de 3 obra(s) emprestada(s).
+7. Devolução com atraso gera multa automática (RF06, RF09): Bruno Costa
+  Dias de atraso: 13
+  Multa gerada: R$ 13.00 (paga: false)
+8. Quitar a multa libera o leitor
+  Apos quitar: possui pendencias? false | pode emprestar? true
+9. Renovação (RF06)
+  Prazo antes: 2026-11-29   Prazo depois: 2026-12-06 (1 renovacao)
+10. Baixa de exemplar (RF10)
+  Estruturas de Dados e Algoritmos em Java: 0 disponivel(is), 0 em circulacao</code></pre>
+  <p style="font-size:9pt;color:var(--cinza)">Trecho; a saída completa está em <code>docs/evidencias/saida-demonstracao.txt</code>.</p>
+
+  <h3>Banco de dados</h3>
+  <p>As seis tabelas criadas pelo backend no PostgreSQL correspondem às classes persistidas do modelo:</p>
+<pre><code> Schema |       Name       | Type  |   Owner
+--------+------------------+-------+------------
+ public | categoria_leitor | table | biblioteca
+ public | emprestimo       | table | biblioteca
+ public | exemplar         | table | biblioteca
+ public | livro            | table | biblioteca
+ public | multa            | table | biblioteca
+ public | usuario          | table | biblioteca</code></pre>
+  <p>A herança <code>Usuario ← Leitor, Bibliotecario</code> foi mapeada em uma única tabela <code>usuario</code> com a coluna <code>tipo</code>. Restrições do banco reforçam as regras: ISBN, tombo, e-mail e matrícula únicos; valores de categoria positivos; e o índice único parcial que impede dois empréstimos em aberto do mesmo exemplar.</p>
+
+  <h3>Resumo dos resultados</h3>
+  <ul>
+    <li>Todas as funcionalidades da versão inicial (RF01 a RF10) estão implementadas e demonstradas, com as regras de negócio dentro das classes do modelo.</li>
+    <li>O sistema roda em três contêineres (interface, backend e banco), como a arquitetura da Fase 2 previa, e os dados persistem no PostgreSQL.</li>
+    <li>As 29 verificações automáticas das regras passam.</li>
+    <li>Além do mínimo, foram entregues: autocadastro de leitor, painel com gráficos, filtros do acervo, busca de leitores, avisos de atraso com multa estimada e cadastro de telefone.</li>
+    <li>Ficam para as próximas versões: reservas (RF11), backup automático, avisos por e-mail, relatórios, LGPD (exclusão/anonimização) e HTTPS.</li>
+  </ul>
+</section>
+
+<!-- ======================= SÍNTESE ======================= -->
+<section class="secao">
+  <h2>Síntese: materiais entregues</h2>
+  <table>
+    <tr><th style="width:26%">Material</th><th>Onde está</th></tr>
+    <tr><td><b>1. Documentação</b></td><td>Este documento (<code>docs/Documentacao_Fase3.pdf</code>).</td></tr>
+    <tr><td><b>2. Código-fonte</b></td><td>Pastas <code>backend/</code> (Java) e <code>frontend/</code> (TypeScript), com <code>README.md</code>, um <code>Dockerfile</code> por serviço e <code>docker-compose.yml</code>. Também no repositório GitHub do grupo.</td></tr>
+    <tr><td><b>3. Evidências de execução</b></td><td><code>docs/evidencias/</code>: 22 capturas de tela, saída dos testes (<code>saida-testes.txt</code>), saída da demonstração em console (<code>saida-demonstracao.txt</code>) e tabelas do banco (<code>tabelas-postgresql.txt</code>).</td></tr>
+  </table>
+
+  <h2 style="margin-top:22px">Roteiro da apresentação (15 a 20 minutos)</h2>
+  <table>
+    <tr><th style="width:12%">Tempo</th><th style="width:28%">Tópico</th><th>O que mostrar</th></tr>
+    <tr><td>0–2 min</td><td>Contextualização</td><td>Biblioteca em papel e os problemas da Fase 1; objetivo do sistema.</td></tr>
+    <tr><td>2–4 min</td><td>Linguagem e ferramentas</td><td>Java 21 + TypeScript + PostgreSQL; os 3 contêineres (Figura 1); tabela da seção 1.2.</td></tr>
+    <tr><td>4–8 min</td><td>Principais classes</td><td>Diagrama da Fase 2 (Figura 2) ao lado do código de <code>Usuario</code>/<code>Leitor</code> (herança), <code>Livro</code>/<code>Exemplar</code> (composição) e <code>Emprestimo</code>/<code>Multa</code> (regras).</td></tr>
+    <tr><td>8–14 min</td><td><b>Demonstração ao vivo</b></td><td>Consulta pública com filtros → criar conta de leitor → login do bibliotecário → painel com gráficos → empréstimo negado (atraso, exemplar, multa, limite) → empréstimo válido → devolução com multa → quitar multa → área do leitor com aviso.</td></tr>
+    <tr><td>14–16 min</td><td>Dificuldades e soluções</td><td>Título × exemplar; concorrência no empréstimo; reconstrução dos objetos a partir do banco; multa estimada.</td></tr>
+    <tr><td>16–18 min</td><td>Resultados e pendências</td><td>Seção 1.4: o que está concluído e o que falta (reservas, backup, e-mail, relatórios, LGPD, HTTPS); testes com 29 verificações OK.</td></tr>
+    <tr><td>18–20 min</td><td>Perguntas</td><td>—</td></tr>
+  </table>
+  <div class="nota"><b>Dica para a demonstração:</b> antes de apresentar, execute <code>docker compose down -v</code> e <code>docker compose up --build</code> para voltar aos dados iniciais (atraso do Bruno, multa do Diego, Carla no limite). Assim todas as regras aparecem na ordem do roteiro.</div>
+
+  <div class="nao-quebrar"><h3>Critérios de avaliação e onde são atendidos</h3>
+  <table>
+    <tr><th style="width:45%">Critério</th><th>Onde é atendido</th></tr>
+    <tr><td>Coerência entre a implementação e a modelagem da Fase 2</td><td>Seção 1.5: correspondência classe a classe e alterações justificadas.</td></tr>
+    <tr><td>Uso adequado dos conceitos de POO</td><td>Seção 1.3: tabela de conceitos e trechos de código.</td></tr>
+    <tr><td>Implementação das principais funcionalidades</td><td>Seção 1.4: RF01 a RF10 concluídos; pendências identificadas.</td></tr>
+    <tr><td>Organização e clareza do código-fonte</td><td>Estrutura em pacotes por camada (seção 1.2) e classes com uma responsabilidade cada.</td></tr>
+    <tr><td>Demonstração do funcionamento</td><td>Seção 1.7: 22 capturas, testes automáticos e execução em console.</td></tr>
+    <tr><td>Dificuldades e soluções</td><td>Seção 1.6.</td></tr>
+  </table></div>
+</section>
+
+</body>
+</html>

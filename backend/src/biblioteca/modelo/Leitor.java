@@ -9,9 +9,14 @@ public class Leitor extends Usuario {
 
     private final String matricula;
     private final CategoriaLeitor categoria;
+    private final String telefone; // somente dígitos (DDD + número); pode ser nulo em registros antigos
     private final List<Emprestimo> emprestimos = new ArrayList<>();
 
     public Leitor(String nome, String email, String senha, String matricula, CategoriaLeitor categoria) {
+        this(nome, email, senha, matricula, categoria, null);
+    }
+
+    public Leitor(String nome, String email, String senha, String matricula, CategoriaLeitor categoria, String telefone) {
         super(nome, email, senha);
         if (matricula == null || matricula.isBlank()) {
             throw new biblioteca.excecao.RegraNegocioException("A matrícula é obrigatória.");
@@ -21,18 +26,33 @@ public class Leitor extends Usuario {
         }
         this.matricula = matricula.trim().toUpperCase();
         this.categoria = categoria;
+        this.telefone = normalizarTelefone(telefone);
     }
 
-    private Leitor(int id, String nome, String email, String senhaHash, String matricula, CategoriaLeitor categoria) {
+    private Leitor(int id, String nome, String email, String senhaHash, String matricula, CategoriaLeitor categoria,
+                   String telefone) {
         super(id, nome, email, senhaHash);
         this.matricula = matricula;
         this.categoria = categoria;
+        this.telefone = telefone;
+    }
+
+    /** Mantém só os dígitos; exige DDD + número (10 ou 11 dígitos). Vazio/nulo = sem telefone. */
+    public static String normalizarTelefone(String bruto) {
+        if (bruto == null || bruto.isBlank()) {
+            return null;
+        }
+        String digitos = bruto.replaceAll("[^0-9]", "");
+        if (digitos.length() != 10 && digitos.length() != 11) {
+            throw new biblioteca.excecao.RegraNegocioException("Telefone inválido: informe DDD + número (10 ou 11 dígitos).");
+        }
+        return digitos;
     }
 
     /** Reconstrói um leitor gravado no banco. */
     public static Leitor restaurar(int id, String nome, String email, String senhaHash,
-                                   String matricula, CategoriaLeitor categoria) {
-        return new Leitor(id, nome, email, senhaHash, matricula, categoria);
+                                   String matricula, CategoriaLeitor categoria, String telefone) {
+        return new Leitor(id, nome, email, senhaHash, matricula, categoria, telefone);
     }
 
     /** Pendência = empréstimo atrasado ou multa em aberto (RF08). */
@@ -87,6 +107,10 @@ public class Leitor extends Usuario {
 
     public String getMatricula() {
         return matricula;
+    }
+
+    public String getTelefone() {
+        return telefone;
     }
 
     public CategoriaLeitor getCategoria() {
