@@ -24,7 +24,7 @@ public class AutenticacaoServico {
             throw new AcessoNegadoException(401, "E-mail ou senha inválidos.");
         }
         Optional<Usuario> usuario = usuarios.buscarPorEmail(email);
-        if (usuario.isEmpty() || !usuario.get().autenticar(senha)) {
+        if (usuario.isEmpty() || !usuario.get().isAtivo() || !usuario.get().autenticar(senha)) {
             throw new AcessoNegadoException(401, "E-mail ou senha inválidos.");
         }
         String token = UUID.randomUUID().toString();
@@ -40,5 +40,21 @@ public class AutenticacaoServico {
         if (token != null) {
             sessoes.remove(token);
         }
+    }
+
+    /** O próprio usuário troca a senha (obrigatório quando ela é provisória). Encerra as suas outras sessões. */
+    public void trocarSenha(Usuario usuario, String tokenAtual, String senhaAtual, String novaSenha) {
+        if (usuario.isSenhaProvisoria()) {
+            usuario.substituirSenhaProvisoria(novaSenha);
+        } else {
+            usuario.trocarSenha(senhaAtual, novaSenha);
+        }
+        usuarios.salvar(usuario);
+        sessoes.entrySet().removeIf(e -> e.getValue() == usuario && !e.getKey().equals(tokenAtual));
+    }
+
+    /** Derruba todas as sessões de um usuário (ex.: após o administrador redefinir a senha). */
+    public void encerrarSessoesDe(Usuario usuario) {
+        sessoes.values().removeIf(u -> u == usuario);
     }
 }

@@ -16,6 +16,18 @@ public final class SenhaUtil {
     private SenhaUtil() {
     }
 
+    /** Sem caracteres que se confundem ao ditar ou ler (0/O, 1/l/I). */
+    private static final String ALFABETO_PROVISORIA = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    /** Senha provisória aleatória de 10 caracteres, entregue ao usuário para o primeiro acesso. */
+    public static String gerarSenhaProvisoria() {
+        StringBuilder sb = new StringBuilder(10);
+        for (int i = 0; i < 10; i++) {
+            sb.append(ALFABETO_PROVISORIA.charAt(ALEATORIO.nextInt(ALFABETO_PROVISORIA.length())));
+        }
+        return sb.toString();
+    }
+
     /** Retorna "sal:hash" em Base64. */
     public static String gerarHash(String senha) {
         byte[] sal = new byte[16];

@@ -105,6 +105,17 @@ small { color: #56626f; }
 details.ajuda { margin-top: 16px; }
 code { background: var(--azul-claro); padding: 1px 6px; border-radius: 4px; }
 
+/* Senha provisória gerada pelo sistema (mostrada uma única vez) */
+.senha-gerada { margin-top: 14px; background: #fff8e1; border: 1px solid #f0d68a; border-left: 5px solid #c58a00; border-radius: 8px; padding: 10px 16px; }
+.senha-gerada p { margin: 6px 0; }
+.senha-gerada code.senha { font-size: 1.15rem; letter-spacing: .08em; padding: 4px 10px; margin-right: 8px; user-select: all; }
+/* Campo de senha com "olhinho" */
+.campo-senha { position: relative; display: block; }
+.campo-senha input { width: 100%; padding-right: 44px; box-sizing: border-box; }
+.campo-senha .olho { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: transparent; border: 0; color: #56626f; padding: 4px 6px; line-height: 0; }
+.campo-senha .olho:hover { color: var(--azul); filter: none; }
+.subtitulo { margin: 20px 0 6px; font-size: .95rem; color: var(--azul); }
+
 @media (max-width: 700px) {
   table { display: block; overflow-x: auto; }
 }

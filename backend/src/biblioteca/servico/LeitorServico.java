@@ -6,6 +6,7 @@ import biblioteca.modelo.CategoriaLeitor;
 import biblioteca.modelo.Leitor;
 import biblioteca.repositorio.CategoriaRepositorio;
 import biblioteca.repositorio.UsuarioRepositorio;
+import biblioteca.util.SenhaUtil;
 import java.util.List;
 
 /** Cadastro de leitores e consulta das categorias (RF03). */
@@ -34,6 +35,19 @@ public class LeitorServico {
         }
         usuarios.salvar(leitor);
         return leitor;
+    }
+
+    /**
+     * Cadastro feito pelo bibliotecário: o sistema gera uma senha provisória, entregue ao leitor,
+     * que será obrigado a trocá-la no primeiro login.
+     */
+    public AdministracaoServico.ComSenha<Leitor> cadastrarComSenhaProvisoria(String nome, String email, String matricula,
+                                                                            int categoriaId, String telefone) {
+        String senha = SenhaUtil.gerarSenhaProvisoria();
+        Leitor leitor = cadastrar(nome, email, senha, matricula, categoriaId, telefone);
+        leitor.definirSenhaProvisoria(senha);
+        usuarios.salvar(leitor);
+        return new AdministracaoServico.ComSenha<>(leitor, senha);
     }
 
     /** Autocadastro público: o novo leitor entra sempre na categoria "Aluno" (o bibliotecário cadastra as demais). */

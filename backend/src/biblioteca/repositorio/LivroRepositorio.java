@@ -28,6 +28,13 @@ public class LivroRepositorio extends RepositorioMemoria<Livro> {
                 l.getTitulo(), l.getAutor(), l.getEditora(), l.getIsbn(), l.getAssunto());
     }
 
+    @Override
+    protected void excluir(Livro l) {
+        if (banco != null) {
+            banco.executar("DELETE FROM livro WHERE id = ?", l.getId());
+        }
+    }
+
     public void carregar() {
         banco.consultar("SELECT * FROM livro ORDER BY id", rs -> {
             Livro l = new Livro(rs.getString("titulo"), rs.getString("autor"), rs.getString("editora"),

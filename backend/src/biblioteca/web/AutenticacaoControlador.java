@@ -41,12 +41,17 @@ public class AutenticacaoControlador implements Controlador {
             return Resposta.ok(Map.of("mensagem", "Sessão encerrada."));
         });
         r.adicionar("GET", "/api/eu", Perfil.AUTENTICADO, ctx -> Resposta.ok(dadosUsuario(ctx.usuario())));
+        r.adicionar("POST", "/api/trocar-senha", Perfil.AUTENTICADO, ctx -> {
+            autenticacao.trocarSenha(ctx.usuario(), ctx.token(), ctx.texto("senhaAtual"), ctx.texto("novaSenha"));
+            return Resposta.ok(dadosUsuario(ctx.usuario()));
+        });
     }
 
     private Map<String, Object> dadosUsuario(Usuario u) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("nome", u.getNome());
         m.put("perfil", u.getPerfil());
+        m.put("trocarSenha", u.isSenhaProvisoria());
         return m;
     }
 }

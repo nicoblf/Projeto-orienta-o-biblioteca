@@ -126,7 +126,7 @@ public final class Banco {
         """
         CREATE TABLE IF NOT EXISTS usuario (
             id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-            tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('LEITOR', 'BIBLIOTECARIO')),
+            tipo VARCHAR(20) NOT NULL CONSTRAINT usuario_tipo_check CHECK (tipo IN ('LEITOR', 'BIBLIOTECARIO', 'ADMIN')),
             nome VARCHAR(120) NOT NULL,
             email VARCHAR(120) NOT NULL UNIQUE,
             senha_hash VARCHAR(200) NOT NULL,
@@ -136,6 +136,23 @@ public final class Banco {
             telefone VARCHAR(20)
         )""",
         "ALTER TABLE usuario ADD COLUMN IF NOT EXISTS telefone VARCHAR(20)",
+        "ALTER TABLE usuario ADD COLUMN IF NOT EXISTS senha_provisoria BOOLEAN NOT NULL DEFAULT FALSE",
+        "ALTER TABLE usuario ADD COLUMN IF NOT EXISTS ativo BOOLEAN NOT NULL DEFAULT TRUE",
+        // Bancos criados antes do perfil ADMIN: recria a restrição de tipo incluindo-o.
+        "ALTER TABLE usuario DROP CONSTRAINT IF EXISTS usuario_tipo_check",
+        "ALTER TABLE usuario ADD CONSTRAINT usuario_tipo_check CHECK (tipo IN ('LEITOR', 'BIBLIOTECARIO', 'ADMIN'))",
+        """
+        CREATE TABLE IF NOT EXISTS log_auditoria (
+            id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            data_hora TIMESTAMP NOT NULL,
+            usuario VARCHAR(160),
+            perfil VARCHAR(20),
+            acao VARCHAR(200) NOT NULL,
+            detalhe VARCHAR(400),
+            resultado VARCHAR(400),
+            sucesso BOOLEAN NOT NULL,
+            ip VARCHAR(60)
+        )""",
         """
         CREATE TABLE IF NOT EXISTS livro (
             id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

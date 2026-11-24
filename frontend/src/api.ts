@@ -1,4 +1,4 @@
-import type { Categoria, Emprestimo, Exemplar, Leitor, Livro, Painel, Sessao } from "./tipos.js";
+import type { Categoria, Emprestimo, Exemplar, Leitor, Livro, Painel, RegistroLog, Sessao, UsuarioAdmin } from "./tipos.js";
 
 /** Erro devolvido pela API (mensagem em português vinda das regras do backend). */
 export class ErroApi extends Error {
@@ -58,6 +58,13 @@ export const api = {
     guardarSessao(s);
     return s;
   },
+  async trocarSenha(senhaAtual: string, novaSenha: string): Promise<void> {
+    const atual = sessaoAtual();
+    const r = await chamar<Omit<Sessao, "token">>("POST", "/api/trocar-senha", { senhaAtual, novaSenha });
+    if (atual) {
+      guardarSessao({ ...atual, ...r });
+    }
+  },
   async logout(): Promise<void> {
     try {
       await chamar("POST", "/api/logout");
@@ -72,7 +79,8 @@ export const api = {
   // acervo (bibliotecário)
   cadastrarLivro: (d: Pick<Livro, "titulo" | "autor" | "editora" | "isbn" | "assunto">) =>
     chamar<Livro>("POST", "/api/livros", d),
-  listarExemplares: (livroId: number) => chamar<Exemplar[]>("GET", `/api/livros/${livroId}/exemplares`),
+  excluirLivro: (livroId: number) => chamar<{ mensagem: string }>("DELETE", `/api/livros/${livroId}`),
+  listarExemplares:(livroId: number) => chamar<Exemplar[]>("GET", `/api/livros/${livroId}/exemplares`),
   cadastrarExemplar: (livroId: number, codigoTombo: string) =>
     chamar<Exemplar>("POST", `/api/livros/${livroId}/exemplares`, { codigoTombo }),
   baixarExemplar: (exemplarId: number, motivo: string) =>
@@ -81,8 +89,18 @@ export const api = {
   // leitores
   listarCategorias: () => chamar<Categoria[]>("GET", "/api/categorias"),
   listarLeitores: () => chamar<Leitor[]>("GET", "/api/leitores"),
-  cadastrarLeitor: (d: { nome: string; email: string; senha: string; matricula: string; telefone: string; categoriaId: number }) =>
-    chamar<Leitor>("POST", "/api/leitores", d),
+  cadastrarLeitor: (d: { nome: string; email: string; matricula: string; telefone: string; categoriaId: number }) =>
+    chamar<Leitor & { senhaProvisoria: string }>("POST", "/api/leitores", d),
+
+  // administração
+  listarUsuarios: () => chamar<UsuarioAdmin[]>("GET", "/api/admin/usuarios"),
+  cadastrarFuncionario: (d: { nome: string; email: string; registroFuncional: string }) =>
+    chamar<{ usuario: UsuarioAdmin; senhaProvisoria: string }>("POST", "/api/admin/funcionarios", d),
+  redefinirSenha: (usuarioId: number) =>
+    chamar<{ usuario: UsuarioAdmin; senhaProvisoria: string }>("POST", `/api/admin/usuarios/${usuarioId}/redefinir-senha`),
+  excluirUsuario: (usuarioId: number) =>
+    chamar<{ apagado: boolean; mensagem: string }>("DELETE", `/api/admin/usuarios/${usuarioId}`),
+  listarLogs:() => chamar<RegistroLog[]>("GET", "/api/admin/logs"),
 
   // circulação
   listarEmprestimos: (status: "ativos" | "atrasados" | "todos") =>

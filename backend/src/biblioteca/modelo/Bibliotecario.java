@@ -16,7 +16,7 @@ public class Bibliotecario extends Usuario {
         this.registroFuncional = registroFuncional.trim();
     }
 
-    private Bibliotecario(int id, String nome, String email, String senhaHash, String registroFuncional) {
+    protected Bibliotecario(int id, String nome, String email, String senhaHash, String registroFuncional) {
         super(id, nome, email, senhaHash);
         this.registroFuncional = registroFuncional;
     }
@@ -38,6 +38,9 @@ public class Bibliotecario extends Usuario {
         if (!exemplar.estaDisponivel()) {
             throw new RegraNegocioException("O exemplar " + exemplar.getCodigoTombo()
                     + " não está disponível (situação: " + exemplar.getSituacao() + ").");
+        }
+        if (!leitor.isAtivo()) {
+            throw new RegraNegocioException(leitor.getNome() + " está com o cadastro desativado.");
         }
         if (leitor.possuiPendencias()) {
             throw new RegraNegocioException(leitor.getNome() + " possui atraso ou multa em aberto.");

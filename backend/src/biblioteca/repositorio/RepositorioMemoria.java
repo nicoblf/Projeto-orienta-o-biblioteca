@@ -35,6 +35,16 @@ public abstract class RepositorioMemoria<T extends Identificavel> {
     protected void atualizar(T item) {
     }
 
+    /** Remove o item da memória e, quando há banco, apaga também a linha gravada. */
+    public void remover(T item) {
+        if (itens.remove(item)) {
+            excluir(item);
+        }
+    }
+
+    protected void excluir(T item) {
+    }
+
     /** Usado na carga inicial a partir do banco (não regrava). */
     protected void adicionarCarregado(T item) {
         itens.add(item);

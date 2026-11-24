@@ -5,5 +5,6 @@ public enum Perfil {
     PUBLICO,
     AUTENTICADO,
     LEITOR,
-    BIBLIOTECARIO
+    BIBLIOTECARIO,
+    ADMIN
 }

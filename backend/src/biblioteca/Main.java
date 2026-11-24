@@ -27,6 +27,10 @@ public class Main {
             DadosIniciais.carregar(app);
             System.out.println("Banco vazio: dados de demonstração carregados.");
         }
+        // Também cobre bancos criados antes de existir o perfil de administrador.
+        app.administracao.garantirAdministrador(
+                System.getenv().getOrDefault("ADMIN_EMAIL", DadosIniciais.EMAIL_ADMIN),
+                System.getenv().getOrDefault("ADMIN_SENHA", DadosIniciais.SENHA_ADMIN));
 
         int porta = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));
         Path web = Path.of(System.getenv().getOrDefault("WEB_DIR", "../frontend"));

@@ -28,7 +28,12 @@ public class AcervoControlador implements Controlador {
             return Resposta.criado(Apresentacao.livro(livro));
         });
 
-        r.adicionar("GET", "/api/livros/{id}/exemplares", Perfil.BIBLIOTECARIO, ctx ->
+        r.adicionar("DELETE", "/api/livros/{id}", Perfil.BIBLIOTECARIO, ctx -> {
+            acervo.excluirLivro(ctx.idRota("id"));
+            return Resposta.ok(Map.of("mensagem", "Livro excluído."));
+        });
+
+        r.adicionar("GET", "/api/livros/{id}/exemplares",Perfil.BIBLIOTECARIO, ctx ->
                 Resposta.ok(acervo.buscarLivro(ctx.idRota("id")).getExemplares().stream()
                         .map(Apresentacao::exemplar).toList()));
 

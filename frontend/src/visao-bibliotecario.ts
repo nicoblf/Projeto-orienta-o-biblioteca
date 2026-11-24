@@ -1,9 +1,11 @@
-import { api } from "./api.js";
+import { api, sessaoAtual } from "./api.js";
+import { confirmarExclusaoUsuario } from "./visao-admin.js";
 import { faixaAvisos, telefoneBR } from "./avisos.js";
 import { barras, colunas, CORES, rosca } from "./graficos.js";
 import { criarFiltroAcervo } from "./filtros-acervo.js";
 import type { Emprestimo, Leitor, Livro, Painel } from "./tipos.js";
 import { $, aviso, data, dinheiro, esc, mensagemDe, tentar } from "./ui.js";
+import { ligarCopiar, quadroSenhaProvisoria } from "./visao-senha.js";
 
 // ---------- Painel ----------
 
@@ -267,7 +269,8 @@ export async function mostrarAcervo(raiz: HTMLElement): Promise<void> {
           .map(
             (l) => `<tr><td><strong>${esc(l.titulo)}</strong></td><td>${esc(l.autor)}</td><td>${esc(l.assunto)}</td><td>${esc(l.isbn)}</td>
             <td><span class="selo ${l.disponiveis > 0 ? "verde" : "vermelho"}">${l.disponiveis} livre(s) / ${l.total}</span></td>
-            <td><button class="secundario" data-livro="${l.id}" data-titulo="${esc(l.titulo)}">Exemplares</button></td></tr>`,
+            <td><button class="secundario" data-livro="${l.id}" data-titulo="${esc(l.titulo)}">Exemplares</button>
+              <button class="perigo" data-excluir="${l.id}" data-titulo="${esc(l.titulo)}">Excluir</button></td></tr>`,
           )
           .join("")}</tbody></table>`;
   }
@@ -339,7 +342,23 @@ export async function mostrarAcervo(raiz: HTMLElement): Promise<void> {
   });
 
   livrosEl.addEventListener("click", (ev) => {
-    const b = (ev.target as HTMLElement).closest<HTMLButtonElement>("[data-livro]");
+    const alvo = ev.target as HTMLElement;
+    const excluir = alvo.closest<HTMLButtonElement>("[data-excluir]");
+    if (excluir) {
+      const id = Number(excluir.dataset["excluir"]);
+      const titulo = excluir.dataset["titulo"] ?? "";
+      void (async () => {
+        if (!window.confirm(`Excluir o livro “${titulo}” e todos os seus exemplares? Esta ação não pode ser desfeita.`)) {
+          return;
+        }
+        if (await tentar(() => api.excluirLivro(id), "Livro excluído.")) {
+          detalhe.hidden = true;
+          await carregar();
+        }
+      })();
+      return;
+    }
+    const b = alvo.closest<HTMLButtonElement>("[data-livro]");
     if (b) {
       void abrirExemplares(Number(b.dataset["livro"]), b.dataset["titulo"] ?? "");
     }
@@ -353,36 +372,53 @@ export async function mostrarLeitores(raiz: HTMLElement): Promise<void> {
   raiz.innerHTML = `
     <section class="cartao">
       <h2>Cadastrar leitor</h2>
-      <form id="novo-leitor" class="grade-form">
-        <input id="nome" placeholder="Nome completo" required />
-        <input id="email" type="email" placeholder="E-mail" required />
-        <input id="matricula" placeholder="Matrícula / RA" required />
-        <input id="telefone" type="tel" placeholder="Telefone com DDD" required />
-        <input id="senha" type="password" placeholder="Senha inicial (mín. 6)" minlength="6" required />
+      <p class="ajuda">O sistema gera uma senha provisória para o leitor, que deve trocá-la no primeiro login.</p>
+      <form id="novo-leitor" class="grade-form" autocomplete="off">
+        <input id="nome" name="leitor-nome" placeholder="Nome completo" required autocomplete="off" />
+        <input id="email" name="leitor-contato" type="email" placeholder="E-mail do leitor" required autocomplete="off" />
+        <input id="matricula" name="leitor-ra" placeholder="Matrícula / RA" required autocomplete="off" />
+        <input id="telefone" name="leitor-tel" type="tel" placeholder="Telefone com DDD" required autocomplete="off" />
         <select id="categoria" required></select>
         <button type="submit">Cadastrar leitor</button>
       </form>
+      <div id="senha-leitor"></div>
     </section>
-    <section class="cartao"><h2>Multas em aberto</h2><div id="multas"></div></section>
+    <section class="cartao"><h2>Multas em aberto</h2><div id="multas"></div>
+      <h3 class="subtitulo">Multas a gerar (livro ainda não devolvido)</h3>
+      <p class="ajuda">A multa só é gerada na devolução. Enquanto o livro não volta, o valor cresce a cada dia e o leitor fica bloqueado para novos empréstimos.</p>
+      <div id="multas-pendentes"></div></section>
     <section class="cartao"><h2>Leitores</h2>
       <input id="busca-leitores" type="search" placeholder="Buscar por nome, RA ou e-mail" style="width:100%;margin-bottom:12px" />
       <div id="leitores"></div></section>`;
   let cadastrados: Leitor[] = [];
 
+  const ehAdmin = sessaoAtual()?.perfil === "ADMIN";
+
   function desenharLeitores(): void {
     const lista = filtrarLeitores(cadastrados, $<HTMLInputElement>("#busca-leitores", raiz).value);
     $("#leitores", raiz).innerHTML = lista.length === 0
       ? `<p class="vazio">Nenhum leitor encontrado.</p>`
-      : `<p class="contagem">${lista.length} de ${cadastrados.length} leitor(es)</p><table><thead><tr><th>Nome</th><th>RA / matrícula</th><th>Telefone</th><th>Categoria</th><th>Empréstimos</th><th>Situação</th></tr></thead>
+      : `<p class="contagem">${lista.length} de ${cadastrados.length} leitor(es)</p><table><thead><tr><th>Nome</th><th>RA / matrícula</th><th>Telefone</th><th>Categoria</th><th>Empréstimos</th><th>Situação</th>${ehAdmin ? "<th></th>" : ""}</tr></thead>
         <tbody>${lista
           .map(
             (l) => `<tr><td>${esc(l.nome)}<br><small>${esc(l.email)}</small></td><td>${esc(l.matricula)}</td><td>${esc(telefoneBR(l.telefone))}</td><td>${esc(l.categoria)}</td>
             <td>${l.emprestimosAtivos} / ${l.limiteObras}</td>
-            <td><span class="selo ${l.podeEmprestar ? "verde" : "vermelho"}">${l.podeEmprestar ? "Pode emprestar" : l.possuiPendencias ? "Com pendências" : "Limite atingido"}</span></td></tr>`,
+            <td>${
+              !l.ativo
+                ? `<span class="selo cinza">Desativado</span>`
+                : `<span class="selo ${l.podeEmprestar ? "verde" : "vermelho"}">${l.podeEmprestar ? "Pode emprestar" : l.possuiPendencias ? "Com pendências" : "Limite atingido"}</span>`
+            }</td>
+            ${ehAdmin ? `<td>${l.ativo ? `<button class="perigo" data-excluir-leitor="${l.id}" data-nome="${esc(l.nome)}">Excluir</button>` : ""}</td>` : ""}</tr>`,
           )
           .join("")}</tbody></table>`;
   }
   $("#busca-leitores", raiz).addEventListener("input", desenharLeitores);
+  $("#leitores", raiz).addEventListener("click", async (ev) => {
+    const b = (ev.target as HTMLElement).closest<HTMLButtonElement>("[data-excluir-leitor]");
+    if (b && (await confirmarExclusaoUsuario(Number(b.dataset["excluirLeitor"]), b.dataset["nome"] ?? ""))) {
+      await carregar();
+    }
+  });
 
 
   async function carregar(): Promise<void> {
@@ -403,10 +439,25 @@ export async function mostrarLeitores(raiz: HTMLElement): Promise<void> {
                  <td><button data-multa="${e.multa?.id}">Registrar pagamento</button></td></tr>`,
                )
                .join("")}</tbody></table>`;
+
+      const atrasados = todos.filter((e) => e.atrasado);
+      $("#multas-pendentes", raiz).innerHTML =
+        atrasados.length === 0
+          ? `<p class="vazio">Nenhum empréstimo em atraso.</p>`
+          : `<table><thead><tr><th>Leitor</th><th>Exemplar</th><th>Dias de atraso</th><th>Multa estimada hoje</th></tr></thead>
+             <tbody>${atrasados
+               .map(
+                 (e) => `<tr><td>${esc(e.leitor)}<br><small>${esc(e.matricula)} · ${esc(telefoneBR(e.telefone))}</small></td>
+                 <td>${esc(e.titulo)}<br><small>Tombo ${esc(e.codigoTombo)}</small></td>
+                 <td>${e.diasAtraso}</td><td>${dinheiro(e.multaEstimada)}</td></tr>`,
+               )
+               .join("")}</tbody></table>`;
     } catch (e) {
       aviso(mensagemDe(e), "erro");
     }
   }
+
+  ligarCopiar(raiz);
 
   try {
     const categorias = await api.listarCategorias();
@@ -420,10 +471,15 @@ export async function mostrarLeitores(raiz: HTMLElement): Promise<void> {
   $("#novo-leitor", raiz).addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const v = (id: string): string => $<HTMLInputElement>(`#${id}`, raiz).value;
-    const dados = { nome: v("nome"), email: v("email"), senha: v("senha"), matricula: v("matricula"), telefone: v("telefone"), categoriaId: Number(v("categoria")) };
-    if (await tentar(() => api.cadastrarLeitor(dados), "Leitor cadastrado.")) {
+    const dados = { nome: v("nome"), email: v("email"), matricula: v("matricula"), telefone: v("telefone"), categoriaId: Number(v("categoria")) };
+    try {
+      const novo = await api.cadastrarLeitor(dados);
+      aviso("Leitor cadastrado.", "ok");
+      $("#senha-leitor", raiz).innerHTML = quadroSenhaProvisoria(novo.nome, novo.email, novo.senhaProvisoria);
       ($("#novo-leitor", raiz) as HTMLFormElement).reset();
       await carregar();
+    } catch (e) {
+      aviso(mensagemDe(e), "erro");
     }
   });
 

@@ -3,6 +3,8 @@ import { $, aviso, esc, mensagemDe } from "./ui.js";
 import { mostrarConsulta } from "./visao-consulta.js";
 import { mostrarLogin } from "./visao-login.js";
 import { mostrarMeusEmprestimos } from "./visao-leitor.js";
+import { mostrarLogs, mostrarUsuariosAdmin } from "./visao-admin.js";
+import { mostrarTrocaSenha } from "./visao-senha.js";
 import {
   mostrarAcervo,
   mostrarAtrasos,
@@ -15,6 +17,8 @@ import {
 type Tela = { id: string; titulo: string; abrir: (raiz: HTMLElement) => Promise<void> | void; oculta?: boolean };
 
 const raiz = $("#conteudo");
+
+const ROTULO_PERFIL = { LEITOR: "leitor", BIBLIOTECARIO: "bibliotecário", ADMIN: "administrador" } as const;
 
 function telasDisponiveis(): Tela[] {
   const sessao = sessaoAtual();
@@ -30,17 +34,37 @@ function telasDisponiveis(): Tela[] {
       },
     ];
   }
-  if (sessao.perfil === "LEITOR") {
-    return [{ id: "meus", titulo: "Meus empréstimos", abrir: mostrarMeusEmprestimos }, consulta];
+  // Senha provisória: nada além da troca de senha até que ela seja feita.
+  if (sessao.trocarSenha) {
+    return [{ id: "senha", titulo: "Definir nova senha", abrir: (r) => mostrarTrocaSenha(r, true, () => navegar("inicio")) }];
   }
-  return [
+  const trocarSenha: Tela = {
+    id: "senha",
+    titulo: "Trocar senha",
+    oculta: true,
+    abrir: (r) => mostrarTrocaSenha(r, false, () => navegar("inicio")),
+  };
+  if (sessao.perfil === "LEITOR") {
+    return [{ id: "meus", titulo: "Meus empréstimos", abrir: mostrarMeusEmprestimos }, consulta, trocarSenha];
+  }
+  const balcao: Tela[] = [
     { id: "painel", titulo: "Painel", abrir: mostrarPainel },
     { id: "balcao", titulo: "Balcão", abrir: mostrarBalcao },
     { id: "atrasos", titulo: "Atrasos", abrir: mostrarAtrasos },
     { id: "acervo-adm", titulo: "Acervo", abrir: mostrarAcervo },
     { id: "leitores", titulo: "Leitores e multas", abrir: mostrarLeitores },
-    consulta,
   ];
+  // Administrador: acesso total (tudo do bibliotecário + administração).
+  if (sessao.perfil === "ADMIN") {
+    return [
+      ...balcao,
+      { id: "usuarios", titulo: "Usuários e senhas", abrir: mostrarUsuariosAdmin },
+      { id: "logs", titulo: "Logs", abrir: mostrarLogs },
+      consulta,
+      trocarSenha,
+    ];
+  }
+  return [...balcao, consulta, trocarSenha];
 }
 
 function desenharMenu(ativa: string): void {
@@ -51,7 +75,9 @@ function desenharMenu(ativa: string): void {
     .map((t) => `<button data-tela="${t.id}" class="${t.id === ativa ? "ativo" : ""}">${esc(t.titulo)}</button>`)
     .join("");
   $("#usuario").innerHTML = sessao
-    ? `<span>${esc(sessao.nome)} <small>(${sessao.perfil === "LEITOR" ? "leitor" : "bibliotecário"})</small></span><button id="sair" class="secundario">Sair</button>`
+    ? `<span>${esc(sessao.nome)} <small>(${ROTULO_PERFIL[sessao.perfil] ?? sessao.perfil})</small></span>` +
+      (sessao.trocarSenha ? "" : `<button id="minha-senha" class="secundario ${ativa === "senha" ? "ativo" : ""}">Trocar senha</button>`) +
+      `<button id="sair" class="secundario">Sair</button>`
     : `<button id="entrar" class="${ativa === "login" ? "ativo" : ""}">Entrar</button>`;
 }
 
@@ -77,9 +103,12 @@ $("#menu").addEventListener("click", (ev) => {
 });
 
 $("#usuario").addEventListener("click", async (ev) => {
-  if ((ev.target as HTMLElement).closest("#entrar")) {
+  const alvo = ev.target as HTMLElement;
+  if (alvo.closest("#entrar")) {
     await navegar("login");
-  } else if ((ev.target as HTMLElement).closest("#sair")) {
+  } else if (alvo.closest("#minha-senha")) {
+    await navegar("senha");
+  } else if (alvo.closest("#sair")) {
     await api.logout().catch(() => undefined);
     await navegar("acervo");
   }

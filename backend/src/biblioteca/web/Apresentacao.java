@@ -1,11 +1,14 @@
 package biblioteca.web;
 
+import biblioteca.modelo.Bibliotecario;
 import biblioteca.modelo.CategoriaLeitor;
 import biblioteca.modelo.Emprestimo;
 import biblioteca.modelo.Exemplar;
 import biblioteca.modelo.Leitor;
 import biblioteca.modelo.Livro;
 import biblioteca.modelo.Multa;
+import biblioteca.modelo.RegistroLog;
+import biblioteca.modelo.Usuario;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -65,7 +68,41 @@ final class Apresentacao {
         m.put("emprestimosAtivos", l.qtdEmprestimosAtivos());
         m.put("limiteObras", l.getCategoria().getLimiteObras());
         m.put("possuiPendencias", l.possuiPendencias());
-        m.put("podeEmprestar", l.podeEmprestar());
+        m.put("podeEmprestar", l.isAtivo() && l.podeEmprestar());
+        m.put("ativo", l.isAtivo());
+        return m;
+    }
+
+    /** Visão do administrador: qualquer usuário, sem dados de empréstimo. */
+    static Map<String, Object> usuario(Usuario u) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", u.getId());
+        m.put("nome", u.getNome());
+        m.put("email", u.getEmail());
+        m.put("perfil", u.getPerfil());
+        String identificacao = null;
+        if (u instanceof Leitor l) {
+            identificacao = l.getMatricula();
+        } else if (u instanceof Bibliotecario b) {
+            identificacao = b.getRegistroFuncional();
+        }
+        m.put("identificacao", identificacao);
+        m.put("senhaProvisoria", u.isSenhaProvisoria());
+        m.put("ativo", u.isAtivo());
+        return m;
+    }
+
+    static Map<String, Object> log(RegistroLog r) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", r.getId());
+        m.put("dataHora", r.getDataHora() == null ? null : r.getDataHora().withNano(0).toString());
+        m.put("usuario", r.getUsuario());
+        m.put("perfil", r.getPerfil());
+        m.put("acao", r.getAcao());
+        m.put("detalhe", r.getDetalhe());
+        m.put("resultado", r.getResultado());
+        m.put("sucesso", r.isSucesso());
+        m.put("ip", r.getIp());
         return m;
     }
 

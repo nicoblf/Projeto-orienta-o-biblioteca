@@ -4,6 +4,7 @@ import biblioteca.excecao.RecursoNaoEncontradoException;
 import biblioteca.excecao.RegraNegocioException;
 import biblioteca.modelo.Exemplar;
 import biblioteca.modelo.Livro;
+import biblioteca.repositorio.EmprestimoRepositorio;
 import biblioteca.repositorio.ExemplarRepositorio;
 import biblioteca.repositorio.LivroRepositorio;
 import java.text.Normalizer;
@@ -14,10 +15,30 @@ public class AcervoServico {
 
     private final LivroRepositorio livros;
     private final ExemplarRepositorio exemplares;
+    private final EmprestimoRepositorio emprestimos;
 
-    public AcervoServico(LivroRepositorio livros, ExemplarRepositorio exemplares) {
+    public AcervoServico(LivroRepositorio livros, ExemplarRepositorio exemplares, EmprestimoRepositorio emprestimos) {
         this.livros = livros;
         this.exemplares = exemplares;
+        this.emprestimos = emprestimos;
+    }
+
+    /**
+     * Exclui um título e seus exemplares. Só é permitido se nenhum exemplar tiver histórico de
+     * empréstimo; caso contrário o histórico se perderia, e a saída correta é dar baixa nos exemplares.
+     */
+    public void excluirLivro(int livroId) {
+        Livro livro = buscarLivro(livroId);
+        boolean temHistorico = emprestimos.listar().stream()
+                .anyMatch(e -> e.getExemplar().getLivro().getId() == livroId);
+        if (temHistorico) {
+            throw new RegraNegocioException("Não é possível excluir \"" + livro.getTitulo()
+                    + "\": seus exemplares têm histórico de empréstimos. Dê baixa nos exemplares em vez de excluir.");
+        }
+        for (Exemplar e : livro.getExemplares()) {
+            exemplares.remover(e);
+        }
+        livros.remover(livro);
     }
 
     public Livro cadastrarLivro(String titulo, String autor, String editora, String isbn, String assunto) {

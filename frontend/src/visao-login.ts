@@ -19,6 +19,7 @@ export function mostrarLogin(raiz: HTMLElement, aoEntrar: (s: Sessao) => void, a
           <summary>Contas de demonstração</summary>
           <p>Bibliotecário: <code>bibliotecario@biblioteca.com</code> / <code>admin123</code></p>
           <p>Leitor: <code>ana@aluno.com</code> / <code>leitor123</code></p>
+          <p>Administrador: <code>admin@biblioteca.com</code> / <code>admin123</code></p>
         </details>
       </form>
 

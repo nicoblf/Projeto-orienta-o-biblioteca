@@ -17,6 +17,9 @@ public final class DadosIniciais {
     public static final String EMAIL_BIBLIOTECARIO = "bibliotecario@biblioteca.com";
     public static final String SENHA_BIBLIOTECARIO = "admin123";
     public static final String SENHA_LEITORES = "leitor123";
+    /** Administrador padrão (conta de demonstração, sem troca obrigatória de senha). */
+    public static final String EMAIL_ADMIN = "admin@biblioteca.com";
+    public static final String SENHA_ADMIN = "admin123";
 
     private DadosIniciais() {
     }

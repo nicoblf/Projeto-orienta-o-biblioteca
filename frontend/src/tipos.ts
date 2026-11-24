@@ -1,11 +1,35 @@
 // Tipos que espelham as classes do modelo Java (Fase 2) como chegam da API.
 
-export type Perfil = "LEITOR" | "BIBLIOTECARIO";
+export type Perfil = "LEITOR" | "BIBLIOTECARIO" | "ADMIN";
 
 export interface Sessao {
   token: string;
   nome: string;
   perfil: Perfil;
+  /** Senha provisória: o usuário precisa trocá-la antes de usar o sistema. */
+  trocarSenha: boolean;
+}
+
+export interface UsuarioAdmin {
+  id: number;
+  nome: string;
+  email: string;
+  perfil: Perfil;
+  identificacao: string | null;
+  senhaProvisoria: boolean;
+  ativo: boolean;
+}
+
+export interface RegistroLog {
+  id: number;
+  dataHora: string;
+  usuario: string | null;
+  perfil: Perfil | null;
+  acao: string;
+  detalhe: string | null;
+  resultado: string | null;
+  sucesso: boolean;
+  ip: string | null;
 }
 
 export interface Livro {
@@ -51,6 +75,7 @@ export interface Leitor {
   limiteObras: number;
   possuiPendencias: boolean;
   podeEmprestar: boolean;
+  ativo: boolean;
 }
 
 export interface Multa {

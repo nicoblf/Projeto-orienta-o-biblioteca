@@ -39,6 +39,13 @@ public class ExemplarRepositorio extends RepositorioMemoria<Exemplar> {
         }
     }
 
+    @Override
+    protected void excluir(Exemplar e) {
+        if (banco != null) {
+            banco.executar("DELETE FROM exemplar WHERE id = ?", e.getId());
+        }
+    }
+
     public void carregar(LivroRepositorio livros) {
         banco.consultar("SELECT * FROM exemplar ORDER BY id", rs -> {
             var livro = livros.buscarPorId(rs.getInt("livro_id")).orElseThrow();

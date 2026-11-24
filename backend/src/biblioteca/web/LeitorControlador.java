@@ -1,7 +1,10 @@
 package biblioteca.web;
 
 import biblioteca.modelo.Leitor;
+import biblioteca.servico.AdministracaoServico;
 import biblioteca.servico.LeitorServico;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /** Cadastro e listagem de leitores (RF03). Dados pessoais só são visíveis ao bibliotecário. */
 public class LeitorControlador implements Controlador {
@@ -20,10 +23,13 @@ public class LeitorControlador implements Controlador {
         r.adicionar("GET", "/api/leitores", Perfil.BIBLIOTECARIO, ctx ->
                 Resposta.ok(leitores.listar().stream().map(Apresentacao::leitor).toList()));
 
+        // O bibliotecário não escolhe senha: o sistema gera uma provisória, trocada no 1º login.
         r.adicionar("POST", "/api/leitores", Perfil.BIBLIOTECARIO, ctx -> {
-            Leitor l = leitores.cadastrar(ctx.texto("nome"), ctx.texto("email"), ctx.texto("senha"),
-                    ctx.texto("matricula"), ctx.inteiro("categoriaId"), ctx.texto("telefone"));
-            return Resposta.criado(Apresentacao.leitor(l));
+            AdministracaoServico.ComSenha<Leitor> novo = leitores.cadastrarComSenhaProvisoria(ctx.texto("nome"),
+                    ctx.texto("email"), ctx.texto("matricula"), ctx.inteiro("categoriaId"), ctx.texto("telefone"));
+            Map<String, Object> corpo = new LinkedHashMap<>(Apresentacao.leitor(novo.usuario()));
+            corpo.put("senhaProvisoria", novo.senhaProvisoria());
+            return Resposta.criado(corpo);
         });
     }
 }

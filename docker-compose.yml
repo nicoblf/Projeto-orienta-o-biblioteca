@@ -23,6 +23,8 @@ services:
       DB_URL: jdbc:postgresql://db:5432/biblioteca
       DB_USER: biblioteca
       DB_PASSWORD: ${POSTGRES_PASSWORD:-biblioteca_dev}
+      # Fuso da biblioteca: datas de empréstimo/atraso e horários do log.
+      TZ: America/Sao_Paulo
     depends_on:
       db:
         condition: service_healthy
