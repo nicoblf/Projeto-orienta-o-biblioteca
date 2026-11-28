@@ -62,4 +62,4 @@ Documentação completa: [docs/Documentacao_Fase3.pdf](docs/Documentacao_Fase3.p
 - **Painel** com gráficos (situação dos exemplares, empréstimos por situação, exemplares por assunto, empréstimos nos últimos 7 dias).
 - **Balcão**: busca de leitores cadastrados por nome, RA ou e-mail, com o botão "Usar RA". **Leitores e multas** também tem busca.
 - **Acervo** (consulta pública e área do bibliotecário): filtros por assunto, autor e disponibilidade, além da busca por texto.
-Precisa reformular o visual!!!!!!
+
